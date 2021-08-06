@@ -9,6 +9,7 @@ type ldapConfig struct {
 	DN       *string `cty:"dn"`
 	Username *string `cty:"username"`
 	Password *string `cty:"password"`
+	URL      *string `cty:"url"`
 }
 
 var ConfigSchema = map[string]*schema.Attribute{
@@ -19,6 +20,9 @@ var ConfigSchema = map[string]*schema.Attribute{
 		Type: schema.TypeString,
 	},
 	"password": {
+		Type: schema.TypeString,
+	},
+	"url": {
 		Type: schema.TypeString,
 	},
 }

@@ -2,8 +2,8 @@ package ldap
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/go-ldap/ldap"
@@ -18,25 +18,36 @@ func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 		return cachedData.(*ldap.Conn), nil
 	}
 
-	var username string
+	var username, password, url string
 
 	ldapConfig := GetConfig(d.Connection)
 	if &ldapConfig != nil {
 		if ldapConfig.Username != nil {
 			username = *ldapConfig.Username
+			password = *ldapConfig.Password
+			url = *ldapConfig.URL
 		}
 	}
 
-	// Error if missing config
+	// Check for all required config args
 	if username == "" {
-		return nil, fmt.Errorf("Partial credentials found in connection config, missing: username")
+		return nil, errors.New("'username' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
+	}
+	if password == "" {
+		return nil, errors.New("'password' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
+	}
+	if url == "" {
+		return nil, errors.New("'url' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
 	}
 
-	ldapURL := "ldap://localhost:10389"
+	ldapURL := fmt.Sprintf("ldap://%s", url)
 	conn, err := ldap.DialURL(ldapURL)
 	if err != nil {
-		log.Fatal(err)
-		return nil, err
+		return nil, errors.New("Failed to connect to LDAP server")
+	}
+
+	if err := conn.Bind(username, password); err != nil {
+		return nil, errors.New("Failed to bind")
 	}
 
 	// Save to cache
