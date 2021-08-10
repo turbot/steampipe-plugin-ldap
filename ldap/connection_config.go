@@ -6,14 +6,19 @@ import (
 )
 
 type ldapConfig struct {
-	DN       *string `cty:"dn"`
-	Username *string `cty:"username"`
-	Password *string `cty:"password"`
-	URL      *string `cty:"url"`
+	Attributes []string `cty:"attributes"`
+	BaseDN     *string  `cty:"base_dn"`
+	Username   *string  `cty:"username"`
+	Password   *string  `cty:"password"`
+	URL        *string  `cty:"url"`
 }
 
 var ConfigSchema = map[string]*schema.Attribute{
-	"dn": {
+	"attributes": {
+		Type: schema.TypeList,
+		Elem: &schema.Attribute{Type: schema.TypeString},
+	},
+	"base_dn": {
 		Type: schema.TypeString,
 	},
 	"username": {
