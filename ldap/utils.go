@@ -2,11 +2,12 @@ package ldap
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/go-ldap/ldap"
+	"github.com/go-ldap/ldap/v3"
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
 )
 
@@ -19,13 +20,25 @@ func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 	}
 
 	var username, password, url string
+	tlsRequired := false
+	tlsInsecureSkipVerify := false
 
 	ldapConfig := GetConfig(d.Connection)
 	if &ldapConfig != nil {
 		if ldapConfig.Username != nil {
 			username = *ldapConfig.Username
+		}
+		if ldapConfig.Password != nil {
 			password = *ldapConfig.Password
+		}
+		if ldapConfig.URL != nil {
 			url = *ldapConfig.URL
+		}
+		if ldapConfig.TLSRequired != nil {
+			tlsRequired = *ldapConfig.TLSRequired
+		}
+		if ldapConfig.TLSInsecureSkipVerify != nil {
+			tlsInsecureSkipVerify = *ldapConfig.TLSInsecureSkipVerify
 		}
 	}
 
@@ -40,20 +53,30 @@ func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 		return nil, errors.New("'url' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
 	}
 
-	ldapURL := fmt.Sprintf("ldap://%s", url)
-	conn, err := ldap.DialURL(ldapURL)
-	if err != nil {
-		return nil, errors.New("Failed to connect to LDAP server")
+	var ldapConn *ldap.Conn
+	var connErr error
+
+	if tlsRequired {
+		ldapURL := fmt.Sprintf("ldaps://%s", url)
+		ldapConn, connErr = ldap.DialURL(ldapURL, ldap.DialWithTLSConfig(&tls.Config{InsecureSkipVerify: tlsInsecureSkipVerify}))
+	} else {
+		ldapURL := fmt.Sprintf("ldap://%s", url)
+		ldapConn, connErr = ldap.DialURL(ldapURL)
 	}
 
-	if err := conn.Bind(username, password); err != nil {
-		return nil, errors.New("Failed to bind")
+	if connErr != nil {
+		return nil, connErr
+	}
+
+	if err := ldapConn.Bind(username, password); err != nil {
+		return nil, err
 	}
 
 	// Save to cache
-	d.ConnectionManager.Cache.Set(cacheKey, conn)
+	// TODO: Use SetWithTTL once we know what default timeout is
+	d.ConnectionManager.Cache.Set(cacheKey, ldapConn)
 
-	return conn, nil
+	return ldapConn, nil
 }
 
 func isNotFoundError(notFoundErrors []string) plugin.ErrorPredicate {
