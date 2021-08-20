@@ -11,8 +11,17 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/plugin/transform"
 )
 
+// TODO: Test this table with 100, 500, and 1000+ users
+// TODO: Test this table against an AD server
+
+// TODO: Add all columns here to allow for proper hydration
+//type userRow struct {
+//	DN string
+//	CN string
+//	ObjectClass []string
+//}
+
 // TODO: Add missing LDAP config options
-// TODO: Fix 'Error: LDAP Result Code 200 "Network Error": ldap: connection closed' after error queries
 func tableLDAPUser(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "ldap_user",
@@ -23,8 +32,9 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				{Name: "filter", Require: plugin.Optional},
 			},
 		},
+		// TODO: Add any missing columns that are useful in LDAP/AD
 		Columns: []*plugin.Column{
-			// TODO: How to avoid all transform.FromField calls?
+			// TODO: Remove unnecessary transform.FromField calls once struct is implemented
 			{
 				Name:        "dn",
 				Description: "The distinguished name (DN) for this resource.",
@@ -161,11 +171,11 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 	keyQuals := d.KeyColumnQuals
 
 	// Filters must start and finish with ()!
-	// TODO: Construct filters based on passed in quals
+	// TODO: Construct filters based on passed in quals, e.g., if 'cn' column is specified in query, add that to filter here
 	if keyQuals["filter"] != nil {
 		filter = keyQuals["filter"].GetStringValue()
 	} else {
-		// TODO: Why doesn't objectCategory work, data?
+		// TODO: Why doesn't objectCategory work, is it the test data?
 		//filter = fmt.Sprintf("(&(objectClass=person)(objectCategory=person))")
 		filter = fmt.Sprintf("(&(objectClass=person))")
 	}
@@ -191,13 +201,15 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 		return nil, err
 	}
 
-	// TODO: Add standardizing for output casing
+	// TODO: Add standardizing for output casing, e.g., CN vs. Cn vs. cn
 	for _, entry := range result.Entries {
+		// TODO: Change from interface to struct once it's implemented
 		row := make(map[string]interface{})
 		for _, attr := range entry.Attributes {
 			// TODO: Handle null char \u0000 better to avoid 'Error: unsupported Unicode escape sequence'
+			// TODO: Remove jpegPhoto attribute handling once null chars are handled
 			if attr.Name != "jpegPhoto" {
-				// TODO: Better handle single/multiple values
+				// TODO: Can we better handle single/multiple values?
 				if len(attr.Values) == 1 {
 					row[attr.Name] = entry.GetAttributeValue(attr.Name)
 				} else if len(attr.Values) > 1 {
