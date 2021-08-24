@@ -7,4 +7,5 @@ connection "ldap" {
   #attributes = ["cn", "displayName", "uid"]
   #tls_required = false
   #tls_insecure_skip_verify = false
+  #user_object_filter = "(&(objectCategory=person)(objectClass=user))"
 }

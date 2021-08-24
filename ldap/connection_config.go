@@ -13,6 +13,7 @@ type ldapConfig struct {
 	Username              *string  `cty:"username"`
 	Password              *string  `cty:"password"`
 	URL                   *string  `cty:"url"`
+	UserObjectFilter      *string  `cty:"user_object_filter"`
 }
 
 var ConfigSchema = map[string]*schema.Attribute{
@@ -36,6 +37,9 @@ var ConfigSchema = map[string]*schema.Attribute{
 		Type: schema.TypeBool,
 	},
 	"url": {
+		Type: schema.TypeString,
+	},
+	"user_object_filter": {
 		Type: schema.TypeString,
 	},
 }
