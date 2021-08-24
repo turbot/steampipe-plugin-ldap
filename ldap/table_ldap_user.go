@@ -3,9 +3,11 @@ package ldap
 import (
 	"context"
 	"errors"
-	"fmt"
+	"strings"
 
 	"github.com/go-ldap/ldap/v3"
+	"github.com/hashicorp/go-hclog"
+	"github.com/iancoleman/strcase"
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
 	"github.com/turbot/steampipe-plugin-sdk/plugin/transform"
@@ -15,11 +17,23 @@ import (
 // TODO: Test this table against an AD server
 
 // TODO: Add all columns here to allow for proper hydration
-//type userRow struct {
-//	DN string
-//	CN string
-//	ObjectClass []string
-//}
+type userRow struct {
+	Dn          string
+	BaseDn      string
+	Filter      string
+	Cn          string
+	Description string
+	DisplayName string
+	GivenName   string
+	Initials    string
+	Mail        string
+	ObjectClass []string
+	Ou          string
+	Sn          string
+	Uid         string
+	Attributes  []*ldap.EntryAttribute
+	Raw         []string
+}
 
 // TODO: Add missing LDAP config options
 func tableLDAPUser(ctx context.Context) *plugin.Table {
@@ -30,94 +44,101 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 			Hydrate: listUsers,
 			KeyColumns: []*plugin.KeyColumn{
 				{Name: "filter", Require: plugin.Optional},
+				{Name: "cn", Require: plugin.Optional},
+				{Name: "dn", Require: plugin.Optional},
+				{Name: "mail", Require: plugin.Optional},
+				{Name: "ou", Require: plugin.Optional},
+				{Name: "uid", Require: plugin.Optional},
+				{Name: "display_name", Require: plugin.Optional},
+				{Name: "given_name", Require: plugin.Optional},
+				{Name: "description", Require: plugin.Optional},
 			},
 		},
 		// TODO: Add any missing columns that are useful in LDAP/AD
 		Columns: []*plugin.Column{
-			// TODO: Remove unnecessary transform.FromField calls once struct is implemented
 			{
 				Name:        "dn",
 				Description: "The distinguished name (DN) for this resource.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("dn"),
+				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "base_dn",
 				Description: "The base path to search in.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("base_dn"),
+				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "filter",
 				Description: "The filter to search with.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromQual("filter"),
+				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "cn",
 				Description: "The user's common name.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("cn"),
+				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "description",
 				Description: "The user's description.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("description"),
+				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "display_name",
 				Description: "The user's display name.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("displayName"),
+				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "given_name",
 				Description: "The user's given name.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("givenName"),
+				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "initials",
 				Description: "The user's initials.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("initials"),
+				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "mail",
 				Description: "The user's email address.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("mail"),
+				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "object_class",
 				Description: "The user's object classes.",
 				Type:        proto.ColumnType_JSON,
-				Transform:   transform.FromField("objectClass"),
+				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "ou",
 				Description: "The user's organizational unit (OU).",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("ou"),
+				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "sn",
 				Description: "The user's surname.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("sn"),
+				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "uid",
 				Description: "The user's ID.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("uid"),
+				Transform:   transform.FromField("Uid"),
 			},
 			{
 				Name:        "attributes",
 				Description: "The attributes for this resource.",
 				Type:        proto.ColumnType_JSON,
-				Transform:   transform.FromField("attributes"),
+				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "raw",
@@ -131,7 +152,7 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Name:        "title",
 				Description: "Title of the resource.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("cn"),
+				Transform:   transform.FromField("Cn"),
 			},
 		},
 	}
@@ -150,7 +171,7 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 	// TODO: Where to close connection?
 	//defer conn.Close()
 
-	var baseDN, filter string
+	var baseDN, filter, userObjectFilter string
 	var attributes []string
 
 	ldapConfig := GetConfig(d.Connection)
@@ -161,6 +182,9 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 		if ldapConfig.Attributes != nil {
 			attributes = ldapConfig.Attributes
 		}
+		if ldapConfig.UserObjectFilter != nil {
+			userObjectFilter = *ldapConfig.UserObjectFilter
+		}
 	}
 
 	// Check for all required config args
@@ -170,29 +194,56 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 
 	keyQuals := d.KeyColumnQuals
 
-	// Filters must start and finish with ()!
-	// TODO: Construct filters based on passed in quals, e.g., if 'cn' column is specified in query, add that to filter here
+	// default value for the user object filter if nothing is passed
+	if userObjectFilter == "" {
+		userObjectFilter = "(&(objectCategory=person)(objectClass=user))"
+	}
+
+	var finalFilter strings.Builder
+	finalFilter.WriteString("(&")
+	finalFilter.WriteString(userObjectFilter)
+
+	// Do we need to enclose the filters within () if the user has missed the same?
+	// ToDo - The filter generation should be a function so that it can be re-used across tables
+	// ToDo - add support for like queries
 	if keyQuals["filter"] != nil {
 		filter = keyQuals["filter"].GetStringValue()
+		finalFilter.WriteString(filter)
 	} else {
-		// TODO: Why doesn't objectCategory work, is it the test data?
-		//filter = fmt.Sprintf("(&(objectClass=person)(objectCategory=person))")
-		filter = fmt.Sprintf("(&(objectClass=person))")
+		var andClause strings.Builder
+		andClause.WriteString("(&")
+		for key, value := range keyQuals {
+			logger.Warn("Key Value", hclog.Fmt("Key %v Value %v", key, value.GetStringValue()))
+			if key == "filter" {
+				continue
+			}
+			var clause strings.Builder
+			clause.WriteString("(")
+			clause.WriteString(strcase.ToLowerCamel(key) + "=" + value.GetStringValue())
+			clause.WriteString(")")
+
+			andClause.WriteString(clause.String())
+		}
+		andClause.WriteString(")")
+
+		finalFilter.WriteString(andClause.String())
 	}
+
+	finalFilter.WriteString(")")
 
 	// TODO: Do we need to escape what the users pass in?
 	//filter = ldap.EscapeFilter(filter)
 
 	logger.Warn("baseDN", baseDN)
-	logger.Warn("filter", filter)
+	logger.Warn("filter", finalFilter.String())
 	logger.Warn("attributes", attributes)
 
 	var searchReq *ldap.SearchRequest
 	// If no attributes are passed in, search request will get all of them
 	if attributes != nil {
-		searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, 0, 0, false, filter, attributes, []ldap.Control{})
+		searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, 0, 0, false, finalFilter.String(), attributes, []ldap.Control{})
 	} else {
-		searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, 0, 0, false, filter, []string{}, []ldap.Control{})
+		searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, 0, 0, false, finalFilter.String(), []string{}, []ldap.Control{})
 	}
 
 	result, err := conn.Search(searchReq)
@@ -201,25 +252,24 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 		return nil, err
 	}
 
-	// TODO: Add standardizing for output casing, e.g., CN vs. Cn vs. cn
 	for _, entry := range result.Entries {
-		// TODO: Change from interface to struct once it's implemented
-		row := make(map[string]interface{})
-		for _, attr := range entry.Attributes {
-			// TODO: Handle null char \u0000 better to avoid 'Error: unsupported Unicode escape sequence'
-			// TODO: Remove jpegPhoto attribute handling once null chars are handled
-			if attr.Name != "jpegPhoto" {
-				// TODO: Can we better handle single/multiple values?
-				if len(attr.Values) == 1 {
-					row[attr.Name] = entry.GetAttributeValue(attr.Name)
-				} else if len(attr.Values) > 1 {
-					row[attr.Name] = entry.GetAttributeValues(attr.Name)
-				}
-			}
+		row := userRow{
+			Dn:          entry.DN,
+			BaseDn:      baseDN,
+			Filter:      finalFilter.String(),
+			Cn:          entry.GetAttributeValue("cn"),
+			Description: entry.GetAttributeValue("description"),
+			DisplayName: entry.GetAttributeValue("displayName"),
+			GivenName:   entry.GetAttributeValue("givenName"),
+			Initials:    entry.GetAttributeValue("initials"),
+			Mail:        entry.GetAttributeValue("mail"),
+			ObjectClass: entry.GetAttributeValues("objectClass"),
+			Ou:          entry.GetAttributeValue("ou"),
+			Sn:          entry.GetAttributeValue("sn"),
+			Uid:         entry.GetAttributeValue("uid"),
+			Attributes:  entry.Attributes,
 		}
-		row["base_dn"] = baseDN
-		row["dn"] = entry.DN
-		row["attributes"] = entry.Attributes
+
 		d.StreamListItem(ctx, row)
 	}
 
