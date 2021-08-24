@@ -5,5 +5,6 @@ go 1.16
 require (
 	github.com/go-ldap/ldap/v3 v3.3.0
 	github.com/hashicorp/go-hclog v0.15.0
+	github.com/iancoleman/strcase v0.1.2
 	github.com/turbot/steampipe-plugin-sdk v1.4.1
 )
