@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"github.com/go-ldap/ldap/v3"
+	"github.com/iancoleman/strcase"
+	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
 )
 
@@ -89,4 +91,41 @@ func isNotFoundError(notFoundErrors []string) plugin.ErrorPredicate {
 		}
 		return false
 	}
+}
+
+func generateFilterString(keyQuals map[string]*proto.QualValue, objectFilter string) string {
+	var andClauses strings.Builder
+
+	if keyQuals["filter"] != nil {
+		andClauses.WriteString(keyQuals["filter"].GetStringValue())
+	} else {
+		for key, value := range keyQuals {
+			if key == "filter" {
+				continue
+			}
+			var clause string
+			if value.GetStringValue() != "" {
+				clause = buildClause(key, value.GetStringValue())
+			} else if value.GetListValue() != nil {
+				clause = generateOrClause(key, value.GetListValue())
+			}
+			andClauses.WriteString(clause)
+		}
+	}
+
+	return "(&" + objectFilter + andClauses.String() + ")"
+}
+
+func generateOrClause(key string, orValues *proto.QualValueList) string {
+	var clauses strings.Builder
+
+	for _, value := range orValues.Values {
+		clauses.WriteString(buildClause(key, value.GetStringValue()))
+	}
+
+	return "(|" + clauses.String() + ")"
+}
+
+func buildClause(key string, value string) string {
+	return "(" + strcase.ToLowerCamel(key) + "=" + value + ")"
 }
