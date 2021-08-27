@@ -3,11 +3,8 @@ package ldap
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"github.com/go-ldap/ldap/v3"
-	"github.com/hashicorp/go-hclog"
-	"github.com/iancoleman/strcase"
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
 	"github.com/turbot/steampipe-plugin-sdk/plugin/transform"
@@ -60,73 +57,61 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Name:        "dn",
 				Description: "The distinguished name (DN) for this resource.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "base_dn",
 				Description: "The base path to search in.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "filter",
 				Description: "The filter to search with.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "cn",
 				Description: "The user's common name.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "description",
 				Description: "The user's description.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "display_name",
 				Description: "The user's display name.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "given_name",
 				Description: "The user's given name.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "initials",
 				Description: "The user's initials.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "mail",
 				Description: "The user's email address.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "object_class",
 				Description: "The user's object classes.",
 				Type:        proto.ColumnType_JSON,
-				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "ou",
 				Description: "The user's organizational unit (OU).",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "sn",
 				Description: "The user's surname.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "uid",
@@ -138,7 +123,6 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Name:        "attributes",
 				Description: "The attributes for this resource.",
 				Type:        proto.ColumnType_JSON,
-				Transform:   transform.FromGo(),
 			},
 			{
 				Name:        "raw",
@@ -171,8 +155,11 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 	// TODO: Where to close connection?
 	//defer conn.Close()
 
-	var baseDN, filter, userObjectFilter string
+	var baseDN, userObjectFilter string
 	var attributes []string
+	var limit int64
+	// how do we maintain the default limit for queries? do we make it a configuration?
+	limit = 50
 
 	ldapConfig := GetConfig(d.Connection)
 	if &ldapConfig != nil {
@@ -199,54 +186,28 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 		userObjectFilter = "(&(objectCategory=person)(objectClass=user))"
 	}
 
-	var finalFilter strings.Builder
-	finalFilter.WriteString("(&")
-	finalFilter.WriteString(userObjectFilter)
+	filter := generateFilterString(keyQuals, userObjectFilter)
 
-	// Do we need to enclose the filters within () if the user has missed the same?
-	// ToDo - The filter generation should be a function so that it can be re-used across tables
-	// ToDo - add support for like queries
-	if keyQuals["filter"] != nil {
-		filter = keyQuals["filter"].GetStringValue()
-		finalFilter.WriteString(filter)
-	} else {
-		var andClause strings.Builder
-		andClause.WriteString("(&")
-		for key, value := range keyQuals {
-			logger.Warn("Key Value", hclog.Fmt("Key %v Value %v", key, value.GetStringValue()))
-			if key == "filter" {
-				continue
-			}
-			var clause strings.Builder
-			clause.WriteString("(")
-			clause.WriteString(strcase.ToLowerCamel(key) + "=" + value.GetStringValue())
-			clause.WriteString(")")
-
-			andClause.WriteString(clause.String())
+	if d.QueryContext.Limit != nil {
+		if *d.QueryContext.Limit < limit {
+			limit = *d.QueryContext.Limit
 		}
-		andClause.WriteString(")")
-
-		finalFilter.WriteString(andClause.String())
 	}
 
-	finalFilter.WriteString(")")
-
-	// TODO: Do we need to escape what the users pass in?
-	//filter = ldap.EscapeFilter(filter)
-
 	logger.Warn("baseDN", baseDN)
-	logger.Warn("filter", finalFilter.String())
+	logger.Warn("filter", filter)
 	logger.Warn("attributes", attributes)
 
 	var searchReq *ldap.SearchRequest
 	// If no attributes are passed in, search request will get all of them
 	if attributes != nil {
-		searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, 0, 0, false, finalFilter.String(), attributes, []ldap.Control{})
+		searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, 0, 0, false, filter, attributes, []ldap.Control{})
 	} else {
-		searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, 0, 0, false, finalFilter.String(), []string{}, []ldap.Control{})
+		searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, 0, 0, false, filter, []string{}, []ldap.Control{})
 	}
 
-	result, err := conn.Search(searchReq)
+	result, err := conn.SearchWithPaging(searchReq, uint32(limit))
+	// result, err := conn.Search(searchReq)
 	if err != nil {
 		plugin.Logger(ctx).Error("ldap_user.listUsers", "search_error", err)
 		return nil, err
@@ -256,7 +217,7 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 		row := userRow{
 			Dn:          entry.DN,
 			BaseDn:      baseDN,
-			Filter:      finalFilter.String(),
+			Filter:      filter,
 			Cn:          entry.GetAttributeValue("cn"),
 			Description: entry.GetAttributeValue("description"),
 			DisplayName: entry.GetAttributeValue("displayName"),
