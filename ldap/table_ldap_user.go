@@ -158,8 +158,10 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 	var baseDN, userObjectFilter string
 	var attributes []string
 	var limit int64
+	var pageSize uint32
 	// how do we maintain the default limit for queries? do we make it a configuration?
-	limit = 50
+	limit = 100
+	pageSize = 25
 
 	ldapConfig := GetConfig(d.Connection)
 	if &ldapConfig != nil {
@@ -191,6 +193,9 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 	if d.QueryContext.Limit != nil {
 		if *d.QueryContext.Limit < limit {
 			limit = *d.QueryContext.Limit
+			if uint32(limit) < pageSize {
+				pageSize = uint32(limit)
+			}
 		}
 	}
 
@@ -201,12 +206,12 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 	var searchReq *ldap.SearchRequest
 	// If no attributes are passed in, search request will get all of them
 	if attributes != nil {
-		searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, 0, 0, false, filter, attributes, []ldap.Control{})
+		searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, int(limit), 0, false, filter, attributes, []ldap.Control{})
 	} else {
-		searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, 0, 0, false, filter, []string{}, []ldap.Control{})
+		searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, int(limit), 0, false, filter, []string{}, []ldap.Control{})
 	}
 
-	result, err := conn.SearchWithPaging(searchReq, uint32(limit))
+	result, err := conn.SearchWithPaging(searchReq, pageSize)
 	// result, err := conn.Search(searchReq)
 	if err != nil {
 		plugin.Logger(ctx).Error("ldap_user.listUsers", "search_error", err)
@@ -217,7 +222,6 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 		row := userRow{
 			Dn:          entry.DN,
 			BaseDn:      baseDN,
-			Filter:      filter,
 			Cn:          entry.GetAttributeValue("cn"),
 			Description: entry.GetAttributeValue("description"),
 			DisplayName: entry.GetAttributeValue("displayName"),
@@ -229,6 +233,10 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 			Sn:          entry.GetAttributeValue("sn"),
 			Uid:         entry.GetAttributeValue("uid"),
 			Attributes:  entry.Attributes,
+		}
+
+		if keyQuals["filter"] != nil {
+			row.Filter = keyQuals["filter"].GetStringValue()
 		}
 
 		d.StreamListItem(ctx, row)
