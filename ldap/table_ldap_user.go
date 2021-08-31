@@ -10,10 +10,6 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/plugin/transform"
 )
 
-// TODO: Test this table with 100, 500, and 1000+ users
-// TODO: Test this table against an AD server
-
-// TODO: Add all columns here to allow for proper hydration
 type userRow struct {
 	Dn          string
 	BaseDn      string
@@ -32,7 +28,6 @@ type userRow struct {
 	Raw         []string
 }
 
-// TODO: Add missing LDAP config options
 func tableLDAPUser(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "ldap_user",
@@ -160,7 +155,7 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 	var limit int64
 	var pageSize uint32
 	// how do we maintain the default limit for queries? do we make it a configuration?
-	limit = 100
+	limit = 500
 	pageSize = 25
 
 	ldapConfig := GetConfig(d.Connection)
@@ -204,42 +199,70 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 	logger.Warn("attributes", attributes)
 
 	var searchReq *ldap.SearchRequest
-	// If no attributes are passed in, search request will get all of them
-	if attributes != nil {
-		searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, int(limit), 0, false, filter, attributes, []ldap.Control{})
-	} else {
-		searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, int(limit), 0, false, filter, []string{}, []ldap.Control{})
-	}
+	paging := ldap.NewControlPaging(pageSize)
 
-	result, err := conn.SearchWithPaging(searchReq, pageSize)
-	// result, err := conn.Search(searchReq)
-	if err != nil {
-		plugin.Logger(ctx).Error("ldap_user.listUsers", "search_error", err)
-		return nil, err
-	}
-
-	for _, entry := range result.Entries {
-		row := userRow{
-			Dn:          entry.DN,
-			BaseDn:      baseDN,
-			Cn:          entry.GetAttributeValue("cn"),
-			Description: entry.GetAttributeValue("description"),
-			DisplayName: entry.GetAttributeValue("displayName"),
-			GivenName:   entry.GetAttributeValue("givenName"),
-			Initials:    entry.GetAttributeValue("initials"),
-			Mail:        entry.GetAttributeValue("mail"),
-			ObjectClass: entry.GetAttributeValues("objectClass"),
-			Ou:          entry.GetAttributeValue("ou"),
-			Sn:          entry.GetAttributeValue("sn"),
-			Uid:         entry.GetAttributeValue("uid"),
-			Attributes:  entry.Attributes,
+	// label for outer for loop
+out:
+	for {
+		logger.Info("pageSize", pageSize)
+		// If no attributes are passed in, search request will get all of them
+		if attributes != nil {
+			searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, 0, 0, false, filter, attributes, []ldap.Control{paging})
+		} else {
+			searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, 0, 0, false, filter, []string{}, []ldap.Control{paging})
 		}
 
-		if keyQuals["filter"] != nil {
-			row.Filter = keyQuals["filter"].GetStringValue()
+		result, err := conn.Search(searchReq)
+		if err != nil {
+			plugin.Logger(ctx).Error("ldap_user.listUsers", "search_error", err)
+			return nil, err
 		}
 
-		d.StreamListItem(ctx, row)
+		for _, entry := range result.Entries {
+			logger.Info("limit", limit)
+			row := userRow{
+				Dn:          entry.DN,
+				BaseDn:      baseDN,
+				Cn:          entry.GetAttributeValue("cn"),
+				Description: entry.GetAttributeValue("description"),
+				DisplayName: entry.GetAttributeValue("displayName"),
+				GivenName:   entry.GetAttributeValue("givenName"),
+				Initials:    entry.GetAttributeValue("initials"),
+				Mail:        entry.GetAttributeValue("mail"),
+				ObjectClass: entry.GetAttributeValues("objectClass"),
+				Ou:          entry.GetAttributeValue("ou"),
+				Sn:          entry.GetAttributeValue("sn"),
+				Uid:         entry.GetAttributeValue("uid"),
+				Attributes:  entry.Attributes,
+			}
+
+			if keyQuals["filter"] != nil {
+				row.Filter = keyQuals["filter"].GetStringValue()
+			}
+
+			d.StreamListItem(ctx, row)
+
+			// Decrement the limit and exit outer loop if all results have been streamed.
+			limit--
+			if limit == 0 {
+				break out
+			}
+		}
+
+		// If the result control does not have paging or if the paging control does not
+		// have a next page cookie we exit from the loop
+		resultCtrl := ldap.FindControl(result.Controls, paging.GetControlType())
+		logger.Info("resultCtrl", resultCtrl)
+		if resultCtrl == nil {
+			break
+		}
+		if pagingCtrl, ok := resultCtrl.(*ldap.ControlPaging); ok {
+			logger.Info("pagingCtrl.Cookie", pagingCtrl.Cookie)
+			if len(pagingCtrl.Cookie) == 0 {
+				break
+			}
+			paging.SetCookie(pagingCtrl.Cookie)
+		}
 	}
 
 	return nil, nil
