@@ -11,21 +11,46 @@ import (
 )
 
 type userRow struct {
-	Dn          string
-	BaseDn      string
-	Filter      string
-	Cn          string
+	// Distinguished Name
+	Dn string
+	// Base Domain Name
+	BaseDn string
+	// Filter string (if passed as query clause)
+	Filter string
+	// Common Name / Full Name
+	Cn string
+	// Description
 	Description string
+	// Display Name / Full Name
 	DisplayName string
-	GivenName   string
-	Initials    string
-	Mail        string
+	// First name
+	GivenName string
+	// Middle Initials
+	Initials string
+	// Email id
+	Mail string
+	// Object Class
 	ObjectClass []string
-	Ou          string
-	Sn          string
-	Uid         string
-	Attributes  []*ldap.EntryAttribute
-	Raw         []string
+	// Organizational Unit to which the user belongs
+	Ou string
+	// Last Name
+	Sn string
+	// User ID
+	Uid string
+	// Department
+	Department string
+	// Object SID
+	ObjectSid string
+	// SAM Account Name
+	SamAccountName string
+	// User Principal Name
+	UserPrincipalName string
+	// Job Title
+	Title string
+	// All attributes that are configured to be returned
+	Attributes []*ldap.EntryAttribute
+	// Raw data from LDAP
+	Raw []string
 }
 
 func tableLDAPUser(ctx context.Context) *plugin.Table {
@@ -37,16 +62,20 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 			KeyColumns: []*plugin.KeyColumn{
 				{Name: "filter", Require: plugin.Optional},
 				{Name: "cn", Require: plugin.Optional},
+				{Name: "sn", Require: plugin.Optional},
 				{Name: "dn", Require: plugin.Optional},
 				{Name: "mail", Require: plugin.Optional},
 				{Name: "ou", Require: plugin.Optional},
 				{Name: "uid", Require: plugin.Optional},
 				{Name: "display_name", Require: plugin.Optional},
 				{Name: "given_name", Require: plugin.Optional},
+				{Name: "department", Require: plugin.Optional},
+				{Name: "object_sid", Require: plugin.Optional},
+				{Name: "sam_account_name", Require: plugin.Optional},
+				{Name: "user_principal_name", Require: plugin.Optional},
 				{Name: "description", Require: plugin.Optional},
 			},
 		},
-		// TODO: Add any missing columns that are useful in LDAP/AD
 		Columns: []*plugin.Column{
 			{
 				Name:        "dn",
@@ -115,6 +144,26 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Transform:   transform.FromField("Uid"),
 			},
 			{
+				Name:        "department",
+				Description: "The department to which the user belongs to.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "object_sid",
+				Description: "The Object SID of the user.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "sam_account_name",
+				Description: "The SAM Account Name of the user.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "user_principal_name",
+				Description: "The User Principal Name of the user.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
 				Name:        "attributes",
 				Description: "The attributes for this resource.",
 				Type:        proto.ColumnType_JSON,
@@ -125,13 +174,11 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Type:        proto.ColumnType_JSON,
 				Transform:   transform.FromValue(),
 			},
-
-			// Standard columns
 			{
 				Name:        "title",
-				Description: "Title of the resource.",
+				Description: "Job Title of this resource.",
 				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("Cn"),
+				// Transform:   transform.FromField("Cn"),
 			},
 		},
 	}
@@ -221,19 +268,24 @@ out:
 		for _, entry := range result.Entries {
 			logger.Info("limit", limit)
 			row := userRow{
-				Dn:          entry.DN,
-				BaseDn:      baseDN,
-				Cn:          entry.GetAttributeValue("cn"),
-				Description: entry.GetAttributeValue("description"),
-				DisplayName: entry.GetAttributeValue("displayName"),
-				GivenName:   entry.GetAttributeValue("givenName"),
-				Initials:    entry.GetAttributeValue("initials"),
-				Mail:        entry.GetAttributeValue("mail"),
-				ObjectClass: entry.GetAttributeValues("objectClass"),
-				Ou:          entry.GetAttributeValue("ou"),
-				Sn:          entry.GetAttributeValue("sn"),
-				Uid:         entry.GetAttributeValue("uid"),
-				Attributes:  entry.Attributes,
+				Dn:                entry.DN,
+				BaseDn:            baseDN,
+				Cn:                entry.GetAttributeValue("cn"),
+				Description:       entry.GetAttributeValue("description"),
+				DisplayName:       entry.GetAttributeValue("displayName"),
+				GivenName:         entry.GetAttributeValue("givenName"),
+				Initials:          entry.GetAttributeValue("initials"),
+				Mail:              entry.GetAttributeValue("mail"),
+				ObjectClass:       entry.GetAttributeValues("objectClass"),
+				Ou:                entry.GetAttributeValue("ou"),
+				Sn:                entry.GetAttributeValue("sn"),
+				Uid:               entry.GetAttributeValue("uid"),
+				Title:             entry.GetAttributeValue("title"),
+				Department:        entry.GetAttributeValue("department"),
+				ObjectSid:         entry.GetAttributeValue("objectSid"),
+				SamAccountName:    entry.GetAttributeValue("samAccountName"),
+				UserPrincipalName: entry.GetAttributeValue("userPrincipalName"),
+				Attributes:        entry.Attributes,
 			}
 
 			if keyQuals["filter"] != nil {
