@@ -202,8 +202,8 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 	var limit int64
 	var pageSize uint32
 	// how do we maintain the default limit for queries? do we make it a configuration?
-	limit = 500
-	pageSize = 25
+	limit = 1000
+	pageSize = 500
 
 	ldapConfig := GetConfig(d.Connection)
 	if &ldapConfig != nil {
@@ -251,7 +251,6 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 	// label for outer for loop
 out:
 	for {
-		logger.Info("pageSize", pageSize)
 		// If no attributes are passed in, search request will get all of them
 		if attributes != nil {
 			searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, 0, 0, false, filter, attributes, []ldap.Control{paging})
@@ -266,7 +265,6 @@ out:
 		}
 
 		for _, entry := range result.Entries {
-			logger.Info("limit", limit)
 			row := userRow{
 				Dn:                entry.DN,
 				BaseDn:            baseDN,
@@ -304,12 +302,10 @@ out:
 		// If the result control does not have paging or if the paging control does not
 		// have a next page cookie we exit from the loop
 		resultCtrl := ldap.FindControl(result.Controls, paging.GetControlType())
-		logger.Info("resultCtrl", resultCtrl)
 		if resultCtrl == nil {
 			break
 		}
 		if pagingCtrl, ok := resultCtrl.(*ldap.ControlPaging); ok {
-			logger.Info("pagingCtrl.Cookie", pagingCtrl.Cookie)
 			if len(pagingCtrl.Cookie) == 0 {
 				break
 			}
