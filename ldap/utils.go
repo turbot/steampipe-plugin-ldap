@@ -21,7 +21,7 @@ func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 		return cachedData.(*ldap.Conn), nil
 	}
 
-	var username, password, url string
+	var username, password, url, baseDN string
 	tlsRequired := false
 	tlsInsecureSkipVerify := false
 
@@ -42,6 +42,9 @@ func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 		if ldapConfig.TLSInsecureSkipVerify != nil {
 			tlsInsecureSkipVerify = *ldapConfig.TLSInsecureSkipVerify
 		}
+		if ldapConfig.BaseDN != nil {
+			baseDN = *ldapConfig.BaseDN
+		}
 	}
 
 	// Check for all required config args
@@ -53,6 +56,9 @@ func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 	}
 	if url == "" {
 		return nil, errors.New("'url' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
+	}
+	if baseDN == "" {
+		return nil, errors.New("'base_dn' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
 	}
 
 	var ldapConn *ldap.Conn

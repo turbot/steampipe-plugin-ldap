@@ -2,7 +2,6 @@ package ldap
 
 import (
 	"context"
-	"errors"
 
 	"github.com/go-ldap/ldap/v3"
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
@@ -207,20 +206,12 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 
 	ldapConfig := GetConfig(d.Connection)
 	if &ldapConfig != nil {
-		if ldapConfig.BaseDN != nil {
-			baseDN = *ldapConfig.BaseDN
-		}
 		if ldapConfig.Attributes != nil {
 			attributes = ldapConfig.Attributes
 		}
 		if ldapConfig.UserObjectFilter != nil {
 			userObjectFilter = *ldapConfig.UserObjectFilter
 		}
-	}
-
-	// Check for all required config args
-	if baseDN == "" {
-		return nil, errors.New("'base_dn' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
 	}
 
 	keyQuals := d.KeyColumnQuals
