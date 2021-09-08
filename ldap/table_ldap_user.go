@@ -281,7 +281,7 @@ out:
 				Title:             entry.GetAttributeValue("title"),
 				Department:        entry.GetAttributeValue("department"),
 				ObjectSid:         entry.GetAttributeValue("objectSid"),
-				SamAccountName:    entry.GetAttributeValue("samAccountName"),
+				SamAccountName:    entry.GetAttributeValue("sAMAccountName"),
 				UserPrincipalName: entry.GetAttributeValue("userPrincipalName"),
 				Attributes:        entry.Attributes,
 			}
@@ -292,9 +292,9 @@ out:
 
 			d.StreamListItem(ctx, row)
 
-			// Decrement the limit and exit outer loop if all results have been streamed.
+			// Decrement the limit and exit outer loop if all results have been streamed or in case of manual cancellation
 			limit--
-			if limit == 0 {
+			if limit == 0 || plugin.IsCancelled(ctx) {
 				break out
 			}
 		}
