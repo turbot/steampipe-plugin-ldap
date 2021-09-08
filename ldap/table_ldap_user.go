@@ -206,6 +206,9 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 
 	ldapConfig := GetConfig(d.Connection)
 	if &ldapConfig != nil {
+		if ldapConfig.BaseDN != nil {
+			baseDN = *ldapConfig.BaseDN
+		}
 		if ldapConfig.Attributes != nil {
 			attributes = ldapConfig.Attributes
 		}
