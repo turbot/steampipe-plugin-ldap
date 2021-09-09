@@ -70,17 +70,17 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 			},
 			{
 				Name:        "cn",
-				Description: "The user's common name.",
+				Description: "The group's common name.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "description",
-				Description: "The user's description.",
+				Description: "The group's description.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "object_class",
-				Description: "The user's object classes.",
+				Description: "The group's object classes.",
 				Type:        proto.ColumnType_JSON,
 			},
 			{
@@ -90,28 +90,28 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 			},
 			{
 				Name:        "object_sid",
-				Description: "The Object SID of the user.",
+				Description: "The Object SID of the group.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "sam_account_name",
-				Description: "The SAM Account Name of the user.",
+				Description: "The SAM Account Name of the group.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "attributes",
-				Description: "The attributes for this resource.",
+				Description: "The attributes of the group.",
 				Type:        proto.ColumnType_JSON,
 			},
 			{
 				Name:        "raw",
-				Description: "The attributes for this resource.",
+				Description: "The attributes of the group.",
 				Type:        proto.ColumnType_JSON,
 				Transform:   transform.FromValue(),
 			},
 			{
 				Name:        "title",
-				Description: "Title of this resource.",
+				Description: "Title of the group.",
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromField("Cn"),
 			},
@@ -152,7 +152,7 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 
 	keyQuals := d.KeyColumnQuals
 
-	// default value for the user object filter if nothing is passed
+	// default value for the group object filter if nothing is passed
 	groupObjectFilter = "(objectClass=group)"
 
 	filter := generateFilterString(keyQuals, groupObjectFilter)
@@ -185,18 +185,18 @@ out:
 
 		result, err := conn.Search(searchReq)
 		if err != nil {
-			plugin.Logger(ctx).Error("ldap_user.listUsers", "search_error", err)
+			plugin.Logger(ctx).Error("ldap_group.listGroups", "search_error", err)
 			return nil, err
 		}
 
 		for _, entry := range result.Entries {
-			row := userRow{
+			row := groupRow{
 				Dn:             entry.DN,
 				BaseDn:         baseDN,
 				Cn:             entry.GetAttributeValue("cn"),
 				Description:    entry.GetAttributeValue("description"),
 				ObjectClass:    entry.GetAttributeValues("objectClass"),
-				Ou:             entry.GetAttributeValue("ou"),
+				Ou:             getOrganizationUnit(entry.DN),
 				Title:          entry.GetAttributeValue("title"),
 				ObjectSid:      entry.GetAttributeValue("objectSid"),
 				SamAccountName: entry.GetAttributeValue("sAMAccountName"),

@@ -135,3 +135,7 @@ func generateOrClause(key string, orValues *proto.QualValueList) string {
 func buildClause(key string, value string) string {
 	return "(" + strcase.ToLowerCamel(key) + "=" + value + ")"
 }
+
+func getOrganizationUnit(dn string) string {
+	return dn[strings.Index(strings.ToUpper(dn), "OU"):]
+}

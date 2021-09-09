@@ -44,8 +44,10 @@ type userRow struct {
 	SamAccountName string
 	// User Principal Name
 	UserPrincipalName string
-	// Job Title
+	// Title
 	Title string
+	// Job Title
+	JobTitle string
 	// All attributes that are configured to be returned
 	Attributes []*ldap.EntryAttribute
 	// Raw data from LDAP
@@ -73,6 +75,7 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				{Name: "sam_account_name", Require: plugin.Optional},
 				{Name: "user_principal_name", Require: plugin.Optional},
 				{Name: "description", Require: plugin.Optional},
+				{Name: "job_title", Require: plugin.Optional},
 			},
 		},
 		Columns: []*plugin.Column{
@@ -164,20 +167,25 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 			},
 			{
 				Name:        "attributes",
-				Description: "The attributes for this resource.",
+				Description: "The attributes of the user.",
 				Type:        proto.ColumnType_JSON,
 			},
 			{
 				Name:        "raw",
-				Description: "The attributes for this resource.",
+				Description: "The attributes of the user.",
 				Type:        proto.ColumnType_JSON,
 				Transform:   transform.FromValue(),
 			},
 			{
 				Name:        "title",
-				Description: "Job Title of this resource.",
+				Description: "Title of the user.",
 				Type:        proto.ColumnType_STRING,
-				// Transform:   transform.FromField("Cn"),
+				Transform:   transform.FromField("Cn"),
+			},
+			{
+				Name:        "job_title",
+				Description: "Job Title of the user.",
+				Type:        proto.ColumnType_STRING,
 			},
 		},
 	}
@@ -269,10 +277,10 @@ out:
 				Initials:          entry.GetAttributeValue("initials"),
 				Mail:              entry.GetAttributeValue("mail"),
 				ObjectClass:       entry.GetAttributeValues("objectClass"),
-				Ou:                entry.GetAttributeValue("ou"),
+				Ou:                getOrganizationUnit(entry.DN),
 				Sn:                entry.GetAttributeValue("sn"),
 				Uid:               entry.GetAttributeValue("uid"),
-				Title:             entry.GetAttributeValue("title"),
+				JobTitle:          entry.GetAttributeValue("title"),
 				Department:        entry.GetAttributeValue("department"),
 				ObjectSid:         entry.GetAttributeValue("objectSid"),
 				SamAccountName:    entry.GetAttributeValue("sAMAccountName"),
