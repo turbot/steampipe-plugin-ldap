@@ -198,7 +198,7 @@ out:
 				ObjectClass:    entry.GetAttributeValues("objectClass"),
 				Ou:             getOrganizationUnit(entry.DN),
 				Title:          entry.GetAttributeValue("title"),
-				ObjectSid:      entry.GetAttributeValue("objectSid"),
+				ObjectSid:      getObjectSid(entry),
 				SamAccountName: entry.GetAttributeValue("sAMAccountName"),
 				Attributes:     entry.Attributes,
 			}
