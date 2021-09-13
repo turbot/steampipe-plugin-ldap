@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/bwmarrin/go-objectsid"
 	"github.com/go-ldap/ldap/v3"
 	"github.com/iancoleman/strcase"
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
@@ -138,4 +139,12 @@ func buildClause(key string, value string) string {
 
 func getOrganizationUnit(dn string) string {
 	return dn[strings.Index(strings.ToUpper(dn), "OU"):]
+}
+
+func getObjectSid(entry *ldap.Entry) string {
+	rawObjectSid := entry.GetRawAttributeValue("objectSid")
+	if len(rawObjectSid) > 0 {
+		return objectsid.Decode(rawObjectSid).String()
+	}
+	return ""
 }

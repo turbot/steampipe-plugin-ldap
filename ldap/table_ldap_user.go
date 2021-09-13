@@ -48,6 +48,8 @@ type userRow struct {
 	Title string
 	// Job Title
 	JobTitle string
+	// Groups to which the user belongs
+	MemberOf []string
 	// All attributes that are configured to be returned
 	Attributes []*ldap.EntryAttribute
 	// Raw data from LDAP
@@ -166,15 +168,9 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Type:        proto.ColumnType_STRING,
 			},
 			{
-				Name:        "attributes",
-				Description: "The attributes of the user.",
+				Name:        "member_of",
+				Description: "Groups that the user is a member of.",
 				Type:        proto.ColumnType_JSON,
-			},
-			{
-				Name:        "raw",
-				Description: "The attributes of the user.",
-				Type:        proto.ColumnType_JSON,
-				Transform:   transform.FromValue(),
 			},
 			{
 				Name:        "title",
@@ -186,6 +182,17 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Name:        "job_title",
 				Description: "Job Title of the user.",
 				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "attributes",
+				Description: "The attributes of the user.",
+				Type:        proto.ColumnType_JSON,
+			},
+			{
+				Name:        "raw",
+				Description: "The attributes of the user.",
+				Type:        proto.ColumnType_JSON,
+				Transform:   transform.FromValue(),
 			},
 		},
 	}
@@ -282,9 +289,10 @@ out:
 				Uid:               entry.GetAttributeValue("uid"),
 				JobTitle:          entry.GetAttributeValue("title"),
 				Department:        entry.GetAttributeValue("department"),
-				ObjectSid:         entry.GetAttributeValue("objectSid"),
+				ObjectSid:         getObjectSid(entry),
 				SamAccountName:    entry.GetAttributeValue("sAMAccountName"),
 				UserPrincipalName: entry.GetAttributeValue("userPrincipalName"),
+				MemberOf:          entry.GetAttributeValues("memberOf"),
 				Attributes:        entry.Attributes,
 			}
 
