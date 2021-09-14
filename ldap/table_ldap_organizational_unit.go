@@ -76,6 +76,11 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 				Type:        proto.ColumnType_STRING,
 			},
 			{
+				Name:        "managed_by",
+				Description: "The person/group that manages the organizational unit.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
 				Name:        "object_class",
 				Description: "The organization's object classes.",
 				Type:        proto.ColumnType_JSON,
@@ -84,11 +89,6 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 				Name:        "attributes",
 				Description: "The attributes of the organization.",
 				Type:        proto.ColumnType_JSON,
-			},
-			{
-				Name:        "managed_by",
-				Description: "The person/group that manages the organizational unit.",
-				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "raw",
