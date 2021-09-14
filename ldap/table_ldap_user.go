@@ -60,13 +60,17 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "ldap_user",
 		Description: "LDAP users.",
+		Get: &plugin.GetConfig{
+			KeyColumns:        plugin.SingleColumn("dn"),
+			ShouldIgnoreError: isNotFoundError([]string{"InvalidVolume.NotFound", "InvalidParameterValue"}),
+			Hydrate:           getUser,
+		},
 		List: &plugin.ListConfig{
 			Hydrate: listUsers,
 			KeyColumns: []*plugin.KeyColumn{
 				{Name: "filter", Require: plugin.Optional},
 				{Name: "cn", Require: plugin.Optional},
 				{Name: "sn", Require: plugin.Optional},
-				{Name: "dn", Require: plugin.Optional},
 				{Name: "mail", Require: plugin.Optional},
 				{Name: "ou", Require: plugin.Optional},
 				{Name: "uid", Require: plugin.Optional},
@@ -196,6 +200,63 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 			},
 		},
 	}
+}
+
+func getUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	logger := plugin.Logger(ctx)
+	logger.Trace("getUser")
+
+	userDN := d.KeyColumnQuals["dn"].GetStringValue()
+
+	conn, err := connect(ctx, d)
+	if err != nil {
+		logger.Error("ldap_group.getUser", "connection_error", err)
+		return nil, err
+	}
+
+	ldapConfig := GetConfig(d.Connection)
+
+	var searchReq *ldap.SearchRequest
+
+	if ldapConfig.Attributes != nil {
+		searchReq = ldap.NewSearchRequest(userDN, ldap.ScopeBaseObject, 0, 1, 0, false, "(&)", ldapConfig.Attributes, []ldap.Control{})
+	} else {
+		searchReq = ldap.NewSearchRequest(userDN, ldap.ScopeBaseObject, 0, 1, 0, false, "(&)", []string{}, []ldap.Control{})
+	}
+
+	result, err := conn.Search(searchReq)
+	if err != nil {
+		logger.Error("ldap_group.getUser", "search_error", err)
+		return nil, err
+	}
+
+	if result.Entries != nil && len(result.Entries) > 0 {
+		entry := result.Entries[0]
+		row := userRow{
+			Dn:                entry.DN,
+			BaseDn:            *ldapConfig.BaseDN,
+			Cn:                entry.GetAttributeValue("cn"),
+			Description:       entry.GetAttributeValue("description"),
+			DisplayName:       entry.GetAttributeValue("displayName"),
+			GivenName:         entry.GetAttributeValue("givenName"),
+			Initials:          entry.GetAttributeValue("initials"),
+			Mail:              entry.GetAttributeValue("mail"),
+			ObjectClass:       entry.GetAttributeValues("objectClass"),
+			Ou:                getOrganizationUnit(entry.DN),
+			Sn:                entry.GetAttributeValue("sn"),
+			Uid:               entry.GetAttributeValue("uid"),
+			JobTitle:          entry.GetAttributeValue("title"),
+			Department:        entry.GetAttributeValue("department"),
+			ObjectSid:         getObjectSid(entry),
+			SamAccountName:    entry.GetAttributeValue("sAMAccountName"),
+			UserPrincipalName: entry.GetAttributeValue("userPrincipalName"),
+			MemberOf:          entry.GetAttributeValues("memberOf"),
+			Attributes:        entry.Attributes,
+		}
+		return row, nil
+	}
+
+	return nil, nil
 }
 
 func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {

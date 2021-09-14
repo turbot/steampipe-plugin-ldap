@@ -40,12 +40,16 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "ldap_group",
 		Description: "LDAP groups.",
+		Get: &plugin.GetConfig{
+			KeyColumns:        plugin.SingleColumn("dn"),
+			ShouldIgnoreError: isNotFoundError([]string{"InvalidVolume.NotFound", "InvalidParameterValue"}),
+			Hydrate:           getGroup,
+		},
 		List: &plugin.ListConfig{
 			Hydrate: listGroups,
 			KeyColumns: []*plugin.KeyColumn{
 				{Name: "filter", Require: plugin.Optional},
 				{Name: "cn", Require: plugin.Optional},
-				{Name: "dn", Require: plugin.Optional},
 				{Name: "ou", Require: plugin.Optional},
 				{Name: "object_sid", Require: plugin.Optional},
 				{Name: "sam_account_name", Require: plugin.Optional},
@@ -117,6 +121,54 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 			},
 		},
 	}
+}
+
+func getGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	logger := plugin.Logger(ctx)
+	logger.Trace("getGroup")
+
+	groupDN := d.KeyColumnQuals["dn"].GetStringValue()
+
+	conn, err := connect(ctx, d)
+	if err != nil {
+		logger.Error("ldap_group.getGroup", "connection_error", err)
+		return nil, err
+	}
+
+	ldapConfig := GetConfig(d.Connection)
+
+	var searchReq *ldap.SearchRequest
+
+	if ldapConfig.Attributes != nil {
+		searchReq = ldap.NewSearchRequest(groupDN, ldap.ScopeBaseObject, 0, 1, 0, false, "(&)", ldapConfig.Attributes, []ldap.Control{})
+	} else {
+		searchReq = ldap.NewSearchRequest(groupDN, ldap.ScopeBaseObject, 0, 1, 0, false, "(&)", []string{}, []ldap.Control{})
+	}
+
+	result, err := conn.Search(searchReq)
+	if err != nil {
+		logger.Error("ldap_group.getGroup", "search_error", err)
+		return nil, err
+	}
+
+	if result.Entries != nil && len(result.Entries) > 0 {
+		entry := result.Entries[0]
+		row := groupRow{
+			Dn:             entry.DN,
+			BaseDn:         *ldapConfig.BaseDN,
+			Cn:             entry.GetAttributeValue("cn"),
+			Description:    entry.GetAttributeValue("description"),
+			ObjectClass:    entry.GetAttributeValues("objectClass"),
+			Ou:             getOrganizationUnit(entry.DN),
+			Title:          entry.GetAttributeValue("title"),
+			ObjectSid:      getObjectSid(entry),
+			SamAccountName: entry.GetAttributeValue("sAMAccountName"),
+			Attributes:     entry.Attributes,
+		}
+		return row, nil
+	}
+
+	return nil, nil
 }
 
 func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
