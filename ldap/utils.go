@@ -14,6 +14,9 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
 )
 
+// Define the constant page size to be used by all ldap tables
+const PageSize uint32 = 500
+
 func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 
 	// Load connection from cache

@@ -134,11 +134,8 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 
 	var baseDN, groupObjectFilter string
 	var attributes []string
-	var limit int64
-	var pageSize uint32
-	// how do we maintain the default limit for queries? do we make it a configuration?
-	limit = 1000
-	pageSize = 500
+	var limit *int64
+	var pageSize uint32 = PageSize
 
 	ldapConfig := GetConfig(d.Connection)
 	if &ldapConfig != nil {
@@ -158,11 +155,9 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 	filter := generateFilterString(keyQuals, groupObjectFilter)
 
 	if d.QueryContext.Limit != nil {
-		if *d.QueryContext.Limit < limit {
-			limit = *d.QueryContext.Limit
-			if uint32(limit) < pageSize {
-				pageSize = uint32(limit)
-			}
+		limit = d.QueryContext.Limit
+		if uint32(*limit) < pageSize {
+			pageSize = uint32(*limit)
 		}
 	}
 
@@ -210,9 +205,11 @@ out:
 			d.StreamListItem(ctx, row)
 
 			// Decrement the limit and exit outer loop if all results have been streamed or in case of manual cancellation
-			limit--
-			if limit == 0 || plugin.IsCancelled(ctx) {
-				break out
+			if limit != nil {
+				*limit--
+				if *limit == 0 || plugin.IsCancelled(ctx) {
+					break out
+				}
 			}
 		}
 
