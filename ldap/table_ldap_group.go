@@ -193,7 +193,6 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 
 	var baseDN, groupObjectFilter string
 	var attributes []string
-	var limit *int64
 	var pageSize uint32 = PageSize
 
 	ldapConfig := GetConfig(d.Connection)
@@ -214,12 +213,11 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 	filter := generateFilterString(keyQuals, groupObjectFilter)
 
 	if d.QueryContext.Limit != nil {
-		limit = d.QueryContext.Limit
-		if uint32(*limit) < pageSize {
-			pageSize = uint32(*limit)
+		if uint32(*d.QueryContext.Limit) < pageSize {
+			pageSize = uint32(*d.QueryContext.Limit)
 		}
 	}
-
+	
 	logger.Warn("baseDN", baseDN)
 	logger.Warn("filter", filter)
 	logger.Warn("attributes", attributes)
@@ -227,7 +225,7 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 	var searchReq *ldap.SearchRequest
 	paging := ldap.NewControlPaging(pageSize)
 
-	// label for outer for loop
+	// label for outer for-loop
 out:
 	for {
 		// If no attributes are passed in, search request will get all of them
@@ -263,12 +261,9 @@ out:
 
 			d.StreamListItem(ctx, row)
 
-			// Decrement the limit and exit outer loop if all results have been streamed or in case of manual cancellation
-			if limit != nil {
-				*limit--
-				if *limit == 0 || plugin.IsCancelled(ctx) {
-					break out
-				}
+			// Stop stearming items if the limit has been hit or in case of manual cancellation
+			if plugin.IsCancelled(ctx) {
+				break out
 			}
 		}
 
