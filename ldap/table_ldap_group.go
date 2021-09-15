@@ -57,9 +57,32 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 			},
 		},
 		Columns: []*plugin.Column{
+			// Top Columns
 			{
 				Name:        "dn",
 				Description: "The distinguished name (DN) for this resource.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "cn",
+				Description: "The group's common name.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "ou",
+				Description: "The group's organizational unit (OU).",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "sam_account_name",
+				Description: "The SAM Account Name of the group.",
+				Type:        proto.ColumnType_STRING,
+			},
+
+			// Other Columns
+			{
+				Name:        "description",
+				Description: "The group's description.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
@@ -73,34 +96,16 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 				Type:        proto.ColumnType_STRING,
 			},
 			{
-				Name:        "cn",
-				Description: "The group's common name.",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
-				Name:        "description",
-				Description: "The group's description.",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
-				Name:        "object_class",
-				Description: "The group's object classes.",
-				Type:        proto.ColumnType_JSON,
-			},
-			{
-				Name:        "ou",
-				Description: "The group's organizational unit (OU).",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
 				Name:        "object_sid",
 				Description: "The Object SID of the group.",
 				Type:        proto.ColumnType_STRING,
 			},
+
+			// JSON Columns
 			{
-				Name:        "sam_account_name",
-				Description: "The SAM Account Name of the group.",
-				Type:        proto.ColumnType_STRING,
+				Name:        "object_class",
+				Description: "The group's object classes.",
+				Type:        proto.ColumnType_JSON,
 			},
 			{
 				Name:        "attributes",
@@ -113,6 +118,8 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 				Type:        proto.ColumnType_JSON,
 				Transform:   transform.FromValue(),
 			},
+
+			// Steampipe Columns
 			{
 				Name:        "title",
 				Description: "Title of the group.",

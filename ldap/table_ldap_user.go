@@ -85,19 +85,10 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 			},
 		},
 		Columns: []*plugin.Column{
+			// Top Columns
 			{
 				Name:        "dn",
 				Description: "The distinguished name (DN) for this resource.",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
-				Name:        "base_dn",
-				Description: "The base path to search in.",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
-				Name:        "filter",
-				Description: "The filter to search with.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
@@ -106,8 +97,8 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Type:        proto.ColumnType_STRING,
 			},
 			{
-				Name:        "description",
-				Description: "The user's description.",
+				Name:        "sn",
+				Description: "The user's surname.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
@@ -131,21 +122,6 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Type:        proto.ColumnType_STRING,
 			},
 			{
-				Name:        "object_class",
-				Description: "The user's object classes.",
-				Type:        proto.ColumnType_JSON,
-			},
-			{
-				Name:        "ou",
-				Description: "The user's organizational unit (OU).",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
-				Name:        "sn",
-				Description: "The user's surname.",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
 				Name:        "uid",
 				Description: "The user's ID.",
 				Type:        proto.ColumnType_STRING,
@@ -154,11 +130,6 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 			{
 				Name:        "department",
 				Description: "The department to which the user belongs to.",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
-				Name:        "object_sid",
-				Description: "The Object SID of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
@@ -172,20 +143,48 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Type:        proto.ColumnType_STRING,
 			},
 			{
+				Name:        "job_title",
+				Description: "Job Title of the user.",
+				Type:        proto.ColumnType_STRING,
+			},
+
+			// Other Columns
+			{
+				Name:        "description",
+				Description: "The user's description.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "base_dn",
+				Description: "The base path to search in.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "filter",
+				Description: "The filter to search with.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "ou",
+				Description: "The user's organizational unit (OU).",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "object_sid",
+				Description: "The Object SID of the user.",
+				Type:        proto.ColumnType_STRING,
+			},
+
+			// JSON Columns
+			{
 				Name:        "member_of",
 				Description: "Groups that the user is a member of.",
 				Type:        proto.ColumnType_JSON,
 			},
 			{
-				Name:        "title",
-				Description: "Title of the user.",
-				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("Cn"),
-			},
-			{
-				Name:        "job_title",
-				Description: "Job Title of the user.",
-				Type:        proto.ColumnType_STRING,
+				Name:        "object_class",
+				Description: "The user's object classes.",
+				Type:        proto.ColumnType_JSON,
 			},
 			{
 				Name:        "attributes",
@@ -197,6 +196,14 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Description: "The attributes of the user.",
 				Type:        proto.ColumnType_JSON,
 				Transform:   transform.FromValue(),
+			},
+
+			// Steampipe Columns
+			{
+				Name:        "title",
+				Description: "Title of the user.",
+				Type:        proto.ColumnType_STRING,
+				Transform:   transform.FromField("Cn"),
 			},
 		},
 	}

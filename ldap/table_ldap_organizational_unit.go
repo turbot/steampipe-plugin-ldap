@@ -50,9 +50,27 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 			},
 		},
 		Columns: []*plugin.Column{
+			// Top Columns
 			{
 				Name:        "dn",
 				Description: "The distinguished name (DN) for this resource.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "ou",
+				Description: "The name of the organizational unit",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "managed_by",
+				Description: "The person/group that manages the organizational unit.",
+				Type:        proto.ColumnType_STRING,
+			},
+
+			// Other Columns
+			{
+				Name:        "description",
+				Description: "The organization's description.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
@@ -65,21 +83,8 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 				Description: "The filter to search with.",
 				Type:        proto.ColumnType_STRING,
 			},
-			{
-				Name:        "ou",
-				Description: "The name of the organizational unit",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
-				Name:        "description",
-				Description: "The organization's description.",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
-				Name:        "managed_by",
-				Description: "The person/group that manages the organizational unit.",
-				Type:        proto.ColumnType_STRING,
-			},
+
+			// JSON Columns
 			{
 				Name:        "object_class",
 				Description: "The organization's object classes.",
@@ -96,6 +101,8 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 				Type:        proto.ColumnType_JSON,
 				Transform:   transform.FromValue(),
 			},
+
+			// Steampipe Columns
 			{
 				Name:        "title",
 				Description: "Title of the organizational unit.",
@@ -114,7 +121,7 @@ func getOrganizationalUnit(ctx context.Context, d *plugin.QueryData, h *plugin.H
 
 	conn, err := connect(ctx, d)
 	if err != nil {
-		logger.Error("ldap_group.getOrganizationalUnit", "connection_error", err)
+		logger.Error("ldap_organizational_unit.getOrganizationalUnit", "connection_error", err)
 		return nil, err
 	}
 
@@ -130,7 +137,7 @@ func getOrganizationalUnit(ctx context.Context, d *plugin.QueryData, h *plugin.H
 
 	result, err := conn.Search(searchReq)
 	if err != nil {
-		logger.Error("ldap_group.getOrganizationalUnit", "search_error", err)
+		logger.Error("ldap_organizational_unit.getOrganizationalUnit", "search_error", err)
 		return nil, err
 	}
 
@@ -157,7 +164,7 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 
 	conn, err := connect(ctx, d)
 	if err != nil {
-		logger.Error("ldap_group.listOrganizationalUnits", "connection_error", err)
+		logger.Error("ldap_organizational_unit.listOrganizationalUnits", "connection_error", err)
 		return nil, err
 	}
 
@@ -181,7 +188,7 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 
 	keyQuals := d.KeyColumnQuals
 
-	// default value for the group object filter if nothing is passed
+	// default value for the organizational unit object filter if nothing is passed
 	organizationalUnitObjectFilter = "(objectClass=organizationalUnit)"
 
 	filter := generateFilterString(keyQuals, organizationalUnitObjectFilter)
@@ -212,7 +219,7 @@ out:
 
 		result, err := conn.Search(searchReq)
 		if err != nil {
-			logger.Error("ldap_group.listOrganizationalUnits", "search_error", err)
+			logger.Error("ldap_organizational_unit.listOrganizationalUnits", "search_error", err)
 			return nil, err
 		}
 
