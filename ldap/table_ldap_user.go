@@ -33,9 +33,7 @@ type userRow struct {
 	// Organizational Unit to which the user belongs
 	Ou string
 	// Last Name
-	Sn string
-	// User ID
-	Uid string
+	Surname string
 	// Department
 	Department string
 	// Object SID
@@ -59,7 +57,7 @@ type userRow struct {
 func tableLDAPUser(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "ldap_user",
-		Description: "LDAP users.",
+		Description: "LDAP User",
 		Get: &plugin.GetConfig{
 			KeyColumns:        plugin.SingleColumn("dn"),
 			ShouldIgnoreError: isNotFoundError([]string{"InvalidVolume.NotFound", "InvalidParameterValue"}),
@@ -70,10 +68,9 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 			KeyColumns: []*plugin.KeyColumn{
 				{Name: "filter", Require: plugin.Optional},
 				{Name: "cn", Require: plugin.Optional},
-				{Name: "sn", Require: plugin.Optional},
+				{Name: "surname", Require: plugin.Optional},
 				{Name: "mail", Require: plugin.Optional},
 				{Name: "ou", Require: plugin.Optional},
-				{Name: "uid", Require: plugin.Optional},
 				{Name: "display_name", Require: plugin.Optional},
 				{Name: "given_name", Require: plugin.Optional},
 				{Name: "department", Require: plugin.Optional},
@@ -88,58 +85,52 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 			// Top Columns
 			{
 				Name:        "dn",
-				Description: "The distinguished name (DN) for this resource.",
+				Description: "Distinguished Name of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "cn",
-				Description: "The user's common name.",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
-				Name:        "sn",
-				Description: "The user's surname.",
+				Description: "Full Name of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "display_name",
-				Description: "The user's display name.",
+				Description: "Display Name of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "given_name",
-				Description: "The user's given name.",
+				Description: "Given Name of the user.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "surname",
+				Description: "Family Name of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "initials",
-				Description: "The user's initials.",
+				Description: "Initials of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "mail",
-				Description: "The user's email address.",
+				Description: "E-mail address of the user.",
 				Type:        proto.ColumnType_STRING,
-			},
-			{
-				Name:        "uid",
-				Description: "The user's ID.",
-				Type:        proto.ColumnType_STRING,
-				Transform:   transform.FromField("Uid"),
 			},
 			{
 				Name:        "department",
-				Description: "The department to which the user belongs to.",
+				Description: "Department to which the user belongs to.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "sam_account_name",
-				Description: "The SAM Account Name of the user.",
+				Description: "Logon Name (pre-Windows 2000) of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "user_principal_name",
-				Description: "The User Principal Name of the user.",
+				Description: "Logon Name of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
@@ -147,31 +138,31 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Description: "Job Title of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
+			{
+				Name:        "ou",
+				Description: "Organizational Unit to which the user belongs to.",
+				Type:        proto.ColumnType_STRING,
+			},
 
 			// Other Columns
 			{
 				Name:        "description",
-				Description: "The user's description.",
+				Description: "Description of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "base_dn",
-				Description: "The base path to search in.",
+				Description: "The Base DN on which the search was performed.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "filter",
-				Description: "The filter to search with.",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
-				Name:        "ou",
-				Description: "The user's organizational unit (OU).",
+				Description: "Optional custom filter passed.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "object_sid",
-				Description: "The Object SID of the user.",
+				Description: "Object SID of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 
@@ -183,17 +174,17 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 			},
 			{
 				Name:        "object_class",
-				Description: "The user's object classes.",
+				Description: "Object Classes of the user.",
 				Type:        proto.ColumnType_JSON,
 			},
 			{
 				Name:        "attributes",
-				Description: "The attributes of the user.",
+				Description: "All attributes that have been returned from LDAP.",
 				Type:        proto.ColumnType_JSON,
 			},
 			{
 				Name:        "raw",
-				Description: "The attributes of the user.",
+				Description: "All attributes along with their raw data values.",
 				Type:        proto.ColumnType_JSON,
 				Transform:   transform.FromValue(),
 			},
@@ -217,7 +208,7 @@ func getUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (i
 
 	conn, err := connect(ctx, d)
 	if err != nil {
-		logger.Error("ldap_group.getUser", "connection_error", err)
+		logger.Error("ldap_user.getUser", "connection_error", err)
 		return nil, err
 	}
 
@@ -233,7 +224,7 @@ func getUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (i
 
 	result, err := conn.Search(searchReq)
 	if err != nil {
-		logger.Error("ldap_group.getUser", "search_error", err)
+		logger.Error("ldap_user.getUser", "search_error", err)
 		return nil, err
 	}
 
@@ -250,8 +241,7 @@ func getUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (i
 			Mail:              entry.GetAttributeValue("mail"),
 			ObjectClass:       entry.GetAttributeValues("objectClass"),
 			Ou:                getOrganizationUnit(entry.DN),
-			Sn:                entry.GetAttributeValue("sn"),
-			Uid:               entry.GetAttributeValue("uid"),
+			Surname:           entry.GetAttributeValue("sn"),
 			JobTitle:          entry.GetAttributeValue("title"),
 			Department:        entry.GetAttributeValue("department"),
 			ObjectSid:         getObjectSid(entry),
@@ -310,7 +300,7 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 			pageSize = uint32(*d.QueryContext.Limit)
 		}
 	}
-	
+
 	logger.Warn("baseDN", baseDN)
 	logger.Warn("filter", filter)
 	logger.Warn("attributes", attributes)
@@ -346,8 +336,7 @@ out:
 				Mail:              entry.GetAttributeValue("mail"),
 				ObjectClass:       entry.GetAttributeValues("objectClass"),
 				Ou:                getOrganizationUnit(entry.DN),
-				Sn:                entry.GetAttributeValue("sn"),
-				Uid:               entry.GetAttributeValue("uid"),
+				Surname:           entry.GetAttributeValue("sn"),
 				JobTitle:          entry.GetAttributeValue("title"),
 				Department:        entry.GetAttributeValue("department"),
 				ObjectSid:         getObjectSid(entry),

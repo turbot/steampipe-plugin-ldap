@@ -30,6 +30,8 @@ type groupRow struct {
 	SamAccountName string
 	// Title
 	Title string
+	// Groups to which the group belongs
+	MemberOf []string
 	// All attributes that are configured to be returned
 	Attributes []*ldap.EntryAttribute
 	// Raw data from LDAP
@@ -39,7 +41,7 @@ type groupRow struct {
 func tableLDAPGroup(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "ldap_group",
-		Description: "LDAP groups.",
+		Description: "LDAP Group",
 		Get: &plugin.GetConfig{
 			KeyColumns:        plugin.SingleColumn("dn"),
 			ShouldIgnoreError: isNotFoundError([]string{"InvalidVolume.NotFound", "InvalidParameterValue"}),
@@ -60,61 +62,66 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 			// Top Columns
 			{
 				Name:        "dn",
-				Description: "The distinguished name (DN) for this resource.",
+				Description: "Distinguished Name of the group.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "cn",
-				Description: "The group's common name.",
+				Description: "Common Name/Full Name of the group.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "ou",
-				Description: "The group's organizational unit (OU).",
+				Description: "Organizational Unit to which the group belongs to.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "sam_account_name",
-				Description: "The SAM Account Name of the group.",
+				Description: "SAM Account Name of the group.",
 				Type:        proto.ColumnType_STRING,
 			},
 
 			// Other Columns
 			{
 				Name:        "description",
-				Description: "The group's description.",
+				Description: "Description of the group.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "base_dn",
-				Description: "The base path to search in.",
+				Description: "The Base DN on which the search was performed.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "filter",
-				Description: "The filter to search with.",
+				Description: "Optional custom filter passed.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "object_sid",
-				Description: "The Object SID of the group.",
+				Description: "Object SID of the group.",
 				Type:        proto.ColumnType_STRING,
 			},
 
 			// JSON Columns
 			{
+				Name:        "member_of",
+				Description: "Groups that the group is a member of.",
+				Type:        proto.ColumnType_JSON,
+			},
+			{
 				Name:        "object_class",
-				Description: "The group's object classes.",
+				Description: "Object Classes of the group.",
 				Type:        proto.ColumnType_JSON,
 			},
 			{
 				Name:        "attributes",
-				Description: "The attributes of the group.",
+				Description: "All attributes that have been returned from LDAP.",
 				Type:        proto.ColumnType_JSON,
 			},
 			{
 				Name:        "raw",
-				Description: "The attributes of the group.",
+				Description: "All attributes along with their raw data values.",
 				Type:        proto.ColumnType_JSON,
 				Transform:   transform.FromValue(),
 			},
@@ -170,6 +177,7 @@ func getGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (
 			Title:          entry.GetAttributeValue("title"),
 			ObjectSid:      getObjectSid(entry),
 			SamAccountName: entry.GetAttributeValue("sAMAccountName"),
+			MemberOf:       entry.GetAttributeValues("memberOf"),
 			Attributes:     entry.Attributes,
 		}
 		return row, nil
@@ -217,7 +225,7 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 			pageSize = uint32(*d.QueryContext.Limit)
 		}
 	}
-	
+
 	logger.Warn("baseDN", baseDN)
 	logger.Warn("filter", filter)
 	logger.Warn("attributes", attributes)
@@ -252,6 +260,7 @@ out:
 				Title:          entry.GetAttributeValue("title"),
 				ObjectSid:      getObjectSid(entry),
 				SamAccountName: entry.GetAttributeValue("sAMAccountName"),
+				MemberOf:       entry.GetAttributeValues("memberOf"),
 				Attributes:     entry.Attributes,
 			}
 

@@ -35,7 +35,7 @@ type organizationalUnitRow struct {
 func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "ldap_organizational_unit",
-		Description: "LDAP Organizational Units",
+		Description: "LDAP Organizational Unit",
 		Get: &plugin.GetConfig{
 			KeyColumns:        plugin.SingleColumn("dn"),
 			ShouldIgnoreError: isNotFoundError([]string{"InvalidVolume.NotFound", "InvalidParameterValue"}),
@@ -53,51 +53,51 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 			// Top Columns
 			{
 				Name:        "dn",
-				Description: "The distinguished name (DN) for this resource.",
+				Description: "Distinguished Name of the organizational unit.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "ou",
-				Description: "The name of the organizational unit",
+				Description: "Name of the organizational unit",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "managed_by",
-				Description: "The person/group that manages the organizational unit.",
+				Description: "The Person/Group that manages the organizational unit.",
 				Type:        proto.ColumnType_STRING,
 			},
 
 			// Other Columns
 			{
 				Name:        "description",
-				Description: "The organization's description.",
+				Description: "Description of the organizational unit.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "base_dn",
-				Description: "The base path to search in.",
+				Description: "The Base DN on which the search was performed.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "filter",
-				Description: "The filter to search with.",
+				Description: "Optional custom filter passed.",
 				Type:        proto.ColumnType_STRING,
 			},
 
 			// JSON Columns
 			{
 				Name:        "object_class",
-				Description: "The organization's object classes.",
+				Description: "Object Classes of the organizational unit.",
 				Type:        proto.ColumnType_JSON,
 			},
 			{
 				Name:        "attributes",
-				Description: "The attributes of the organization.",
+				Description: "All attributes that have been returned from LDAP.",
 				Type:        proto.ColumnType_JSON,
 			},
 			{
 				Name:        "raw",
-				Description: "The attributes of the organization.",
+				Description: "All attributes along with their raw data values.",
 				Type:        proto.ColumnType_JSON,
 				Transform:   transform.FromValue(),
 			},
