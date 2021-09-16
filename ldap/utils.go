@@ -91,6 +91,38 @@ func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 	return ldapConn, nil
 }
 
+func reconnect(ctx context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
+	d.ConnectionManager.Cache.Delete("ldap")
+	conn, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("ldap_utils.reconnect", "reconnect_error", err)
+		return nil, err
+	}
+	return conn, nil
+}
+
+func search(ctx context.Context, d *plugin.QueryData, searchReq *ldap.SearchRequest) (*ldap.SearchResult, error) {
+	conn, err := connect(ctx, d)
+	if err != nil {
+		plugin.Logger(ctx).Error("ldap_utils.search", "connection_error", err)
+		return nil, err
+	}
+	searchResult, e := conn.Search(searchReq)
+	if e != nil && ldap.IsErrorWithCode(e, 200) {
+		plugin.Logger(ctx).Info("LDAP Connection closed, trying to reconnect ...")
+		conn, err := reconnect(ctx, d)
+		if err != nil {
+			return nil, err
+		}
+		searchResult, err := conn.Search(searchReq)
+		if err != nil {
+			return nil, err
+		}
+		return searchResult, nil
+	}
+	return searchResult, nil
+}
+
 func isNotFoundError(notFoundErrors []string) plugin.ErrorPredicate {
 	return func(err error) bool {
 		errMsg := err.Error()

@@ -143,12 +143,6 @@ func getGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (
 
 	groupDN := d.KeyColumnQuals["dn"].GetStringValue()
 
-	conn, err := connect(ctx, d)
-	if err != nil {
-		logger.Error("ldap_group.getGroup", "connection_error", err)
-		return nil, err
-	}
-
 	ldapConfig := GetConfig(d.Connection)
 
 	var searchReq *ldap.SearchRequest
@@ -159,7 +153,7 @@ func getGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (
 		searchReq = ldap.NewSearchRequest(groupDN, ldap.ScopeBaseObject, 0, 1, 0, false, "(&)", []string{}, []ldap.Control{})
 	}
 
-	result, err := conn.Search(searchReq)
+	result, err := search(ctx, d, searchReq)
 	if err != nil {
 		logger.Error("ldap_group.getGroup", "search_error", err)
 		return nil, err
@@ -189,15 +183,6 @@ func getGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (
 func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	logger.Trace("listGroups")
-
-	conn, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("ldap_group.listGroups", "connection_error", err)
-		return nil, err
-	}
-
-	// TODO: Where to close connection?
-	//defer conn.Close()
 
 	var baseDN, groupObjectFilter string
 	var attributes []string
@@ -233,8 +218,6 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 	var searchReq *ldap.SearchRequest
 	paging := ldap.NewControlPaging(pageSize)
 
-	// label for outer for-loop
-out:
 	for {
 		// If no attributes are passed in, search request will get all of them
 		if attributes != nil {
@@ -243,7 +226,7 @@ out:
 			searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, 0, 0, false, filter, []string{}, []ldap.Control{paging})
 		}
 
-		result, err := conn.Search(searchReq)
+		result, err := search(ctx, d, searchReq)
 		if err != nil {
 			plugin.Logger(ctx).Error("ldap_group.listGroups", "search_error", err)
 			return nil, err
@@ -272,7 +255,7 @@ out:
 
 			// Stop stearming items if the limit has been hit or in case of manual cancellation
 			if plugin.IsCancelled(ctx) {
-				break out
+				return nil, nil
 			}
 		}
 

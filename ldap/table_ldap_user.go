@@ -206,12 +206,6 @@ func getUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (i
 
 	userDN := d.KeyColumnQuals["dn"].GetStringValue()
 
-	conn, err := connect(ctx, d)
-	if err != nil {
-		logger.Error("ldap_user.getUser", "connection_error", err)
-		return nil, err
-	}
-
 	ldapConfig := GetConfig(d.Connection)
 
 	var searchReq *ldap.SearchRequest
@@ -222,7 +216,7 @@ func getUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (i
 		searchReq = ldap.NewSearchRequest(userDN, ldap.ScopeBaseObject, 0, 1, 0, false, "(&)", []string{}, []ldap.Control{})
 	}
 
-	result, err := conn.Search(searchReq)
+	result, err := search(ctx, d, searchReq)
 	if err != nil {
 		logger.Error("ldap_user.getUser", "search_error", err)
 		return nil, err
@@ -259,15 +253,6 @@ func getUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (i
 func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 	logger.Trace("listUsers")
-
-	conn, err := connect(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("ldap_user.listUsers", "connection_error", err)
-		return nil, err
-	}
-
-	// TODO: Where to close connection?
-	//defer conn.Close()
 
 	var baseDN, userObjectFilter string
 	var attributes []string
@@ -308,8 +293,6 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 	var searchReq *ldap.SearchRequest
 	paging := ldap.NewControlPaging(pageSize)
 
-	// label for outer for-loop
-out:
 	for {
 		// If no attributes are passed in, search request will get all of them
 		if attributes != nil {
@@ -318,11 +301,15 @@ out:
 			searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, 0, 0, false, filter, []string{}, []ldap.Control{paging})
 		}
 
-		result, err := conn.Search(searchReq)
+		plugin.Logger(ctx).Error("ldap_user.listUsers", "Firing Search")
+
+		result, err := search(ctx, d, searchReq)
 		if err != nil {
 			plugin.Logger(ctx).Error("ldap_user.listUsers", "search_error", err)
 			return nil, err
 		}
+
+		plugin.Logger(ctx).Error("ldap_user.listUsers", "Results Returned")
 
 		for _, entry := range result.Entries {
 			row := userRow{
@@ -354,7 +341,7 @@ out:
 
 			// Stop stearming items if the limit has been hit or in case of manual cancellation
 			if plugin.IsCancelled(ctx) {
-				break out
+				return nil, nil
 			}
 		}
 
