@@ -301,15 +301,11 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 			searchReq = ldap.NewSearchRequest(baseDN, ldap.ScopeWholeSubtree, 0, 0, 0, false, filter, []string{}, []ldap.Control{paging})
 		}
 
-		plugin.Logger(ctx).Error("ldap_user.listUsers", "Firing Search")
-
 		result, err := search(ctx, d, searchReq)
 		if err != nil {
 			plugin.Logger(ctx).Error("ldap_user.listUsers", "search_error", err)
 			return nil, err
 		}
-
-		plugin.Logger(ctx).Error("ldap_user.listUsers", "Results Returned")
 
 		for _, entry := range result.Entries {
 			row := userRow{
