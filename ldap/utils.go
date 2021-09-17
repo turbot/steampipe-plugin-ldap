@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/go-objectsid"
 	"github.com/go-ldap/ldap/v3"
@@ -16,6 +17,9 @@ import (
 
 // Define the constant page size to be used by all ldap tables
 const PageSize uint32 = 1000
+
+// Define the time filter timestamo format
+const FilterTimestampFormat = "20060102150405.000Z"
 
 func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 
@@ -135,23 +139,41 @@ func isNotFoundError(notFoundErrors []string) plugin.ErrorPredicate {
 	}
 }
 
-func generateFilterString(keyQuals map[string]*proto.QualValue, objectFilter string) string {
+func generateFilterString(keyQuals map[string]*proto.QualValue, quals map[string]*plugin.KeyColumnQuals, objectFilter string) string {
 	var andClauses strings.Builder
 
 	if keyQuals["filter"] != nil {
 		andClauses.WriteString(keyQuals["filter"].GetStringValue())
 	} else {
+		// Range over the key quals
 		for key, value := range keyQuals {
 			if key == "filter" {
 				continue
 			}
 			var clause string
 			if value.GetStringValue() != "" {
-				clause = buildClause(key, value.GetStringValue())
+				clause = buildClause(key, value.GetStringValue(), "=")
 			} else if value.GetListValue() != nil {
 				clause = generateOrClause(key, value.GetListValue())
 			}
 			andClauses.WriteString(clause)
+		}
+
+		// Get individual quals
+		if quals["created"] != nil {
+			for _, q := range quals["created"].Quals {
+				timeString := q.Value.GetTimestampValue().AsTime().Format(FilterTimestampFormat)
+				clause := buildClause("whenCreated", timeString, q.Operator)
+				andClauses.WriteString(clause)
+			}
+		}
+
+		if quals["changed"] != nil {
+			for _, q := range quals["changed"].Quals {
+				timeString := q.Value.GetTimestampValue().AsTime().Format(FilterTimestampFormat)
+				clause := buildClause("whenChanged", timeString, q.Operator)
+				andClauses.WriteString(clause)
+			}
 		}
 	}
 
@@ -162,14 +184,14 @@ func generateOrClause(key string, orValues *proto.QualValueList) string {
 	var clauses strings.Builder
 
 	for _, value := range orValues.Values {
-		clauses.WriteString(buildClause(key, value.GetStringValue()))
+		clauses.WriteString(buildClause(key, value.GetStringValue(), "="))
 	}
 
 	return "(|" + clauses.String() + ")"
 }
 
-func buildClause(key string, value string) string {
-	return "(" + strcase.ToLowerCamel(key) + "=" + value + ")"
+func buildClause(key string, value string, operator string) string {
+	return "(" + strcase.ToLowerCamel(key) + operator + value + ")"
 }
 
 func getOrganizationUnit(dn string) string {
@@ -182,4 +204,23 @@ func getObjectSid(entry *ldap.Entry) string {
 		return objectsid.Decode(rawObjectSid).String()
 	}
 	return ""
+}
+
+func convertToTimestamp(ctx context.Context, str string) *time.Time {
+	// If there is a blank string, return zero time
+	if str == "" {
+		return &time.Time{}
+	}
+
+	// Frame the layout according to the data available. The front part remains constant to '20060102150405'
+	// The second part i.e. after '.' can have a variable number of 0's followed by Z
+	layout := "20060102150405." + strings.Split(str, ".")[1]
+	t, err := time.Parse(layout, str)
+	if err != nil {
+		plugin.Logger(ctx).Error("ldap_utils.convertToTimestamp", "conversion_error", err)
+		// Return zero time in case of a conversion error
+		return &time.Time{}
+	}
+	// Return the converted time if conversion is successful
+	return &t
 }

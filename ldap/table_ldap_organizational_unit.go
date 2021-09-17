@@ -2,6 +2,7 @@ package ldap
 
 import (
 	"context"
+	"time"
 
 	"github.com/go-ldap/ldap/v3"
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
@@ -20,6 +21,10 @@ type organizationalUnitRow struct {
 	Ou string
 	// Description
 	Description string
+	// Create Date
+	Created *time.Time
+	// Modified Date
+	Changed *time.Time
 	// Object Class
 	ObjectClass []string
 	// Title
@@ -47,6 +52,8 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 				{Name: "filter", Require: plugin.Optional},
 				{Name: "ou", Require: plugin.Optional},
 				{Name: "description", Require: plugin.Optional},
+				{Name: "created", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
+				{Name: "changed", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
 			},
 		},
 		Columns: []*plugin.Column{
@@ -65,6 +72,16 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 				Name:        "managed_by",
 				Description: "The Person/Group that manages the organizational unit.",
 				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "created",
+				Description: "Date & Time the organizational unit was created.",
+				Type:        proto.ColumnType_TIMESTAMP,
+			},
+			{
+				Name:        "changed",
+				Description: "Date & Time the organizational unit was last modified.",
+				Type:        proto.ColumnType_TIMESTAMP,
 			},
 
 			// Other Columns
@@ -146,6 +163,15 @@ func getOrganizationalUnit(ctx context.Context, d *plugin.QueryData, h *plugin.H
 			ManagedBy:   entry.GetAttributeValue("managedBy"),
 			Attributes:  entry.Attributes,
 		}
+
+		// Populate Time fields
+		if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))) {
+			row.Created = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
+		}
+		if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))) {
+			row.Changed = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
+		}
+
 		return row, nil
 	}
 
@@ -171,11 +197,12 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 	}
 
 	keyQuals := d.KeyColumnQuals
+	quals := d.Quals
 
 	// default value for the organizational unit object filter if nothing is passed
 	organizationalUnitObjectFilter = "(objectClass=organizationalUnit)"
 
-	filter := generateFilterString(keyQuals, organizationalUnitObjectFilter)
+	filter := generateFilterString(keyQuals, quals, organizationalUnitObjectFilter)
 
 	if d.QueryContext.Limit != nil {
 		if uint32(*d.QueryContext.Limit) < pageSize {
@@ -217,6 +244,14 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 
 			if keyQuals["filter"] != nil {
 				row.Filter = keyQuals["filter"].GetStringValue()
+			}
+
+			// Populate Time fields
+			if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))) {
+				row.Created = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
+			}
+			if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))) {
+				row.Changed = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
 			}
 
 			d.StreamListItem(ctx, row)

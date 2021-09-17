@@ -2,6 +2,7 @@ package ldap
 
 import (
 	"context"
+	"time"
 
 	"github.com/go-ldap/ldap/v3"
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
@@ -28,6 +29,10 @@ type userRow struct {
 	Initials string
 	// Email id
 	Mail string
+	// Create Date
+	Created *time.Time
+	// Modified Date
+	Changed *time.Time
 	// Object Class
 	ObjectClass []string
 	// Organizational Unit to which the user belongs
@@ -79,6 +84,8 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				{Name: "user_principal_name", Require: plugin.Optional},
 				{Name: "description", Require: plugin.Optional},
 				{Name: "job_title", Require: plugin.Optional},
+				{Name: "created", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
+				{Name: "changed", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
 			},
 		},
 		Columns: []*plugin.Column{
@@ -122,6 +129,16 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Name:        "department",
 				Description: "Department to which the user belongs to.",
 				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "created",
+				Description: "Date & Time the user was created.",
+				Type:        proto.ColumnType_TIMESTAMP,
+			},
+			{
+				Name:        "changed",
+				Description: "Date & Time the user was last modified.",
+				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "sam_account_name",
@@ -244,6 +261,15 @@ func getUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (i
 			MemberOf:          entry.GetAttributeValues("memberOf"),
 			Attributes:        entry.Attributes,
 		}
+
+		// Populate Time fields
+		if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))) {
+			row.Created = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
+		}
+		if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))) {
+			row.Changed = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
+		}
+
 		return row, nil
 	}
 
@@ -272,13 +298,14 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 	}
 
 	keyQuals := d.KeyColumnQuals
+	quals := d.Quals
 
 	// default value for the user object filter if nothing is passed
 	if userObjectFilter == "" {
 		userObjectFilter = "(&(objectCategory=person)(objectClass=user))"
 	}
 
-	filter := generateFilterString(keyQuals, userObjectFilter)
+	filter := generateFilterString(keyQuals, quals, userObjectFilter)
 
 	if d.QueryContext.Limit != nil {
 		if uint32(*d.QueryContext.Limit) < pageSize {
@@ -331,6 +358,14 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 
 			if keyQuals["filter"] != nil {
 				row.Filter = keyQuals["filter"].GetStringValue()
+			}
+
+			// Populate Time fields
+			if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))) {
+				row.Created = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
+			}
+			if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))) {
+				row.Changed = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
 			}
 
 			d.StreamListItem(ctx, row)
