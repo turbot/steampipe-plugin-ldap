@@ -2,6 +2,7 @@ package ldap
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"github.com/go-ldap/ldap/v3"
@@ -53,6 +54,8 @@ type userRow struct {
 	JobTitle string
 	// Groups to which the user belongs
 	MemberOf []string
+	// Whether the user account is disabled
+	Disabled *bool
 	// All attributes that are configured to be returned
 	Attributes map[string][]string
 }
@@ -84,6 +87,7 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				{Name: "job_title", Require: plugin.Optional},
 				{Name: "created", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
 				{Name: "changed", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
+				{Name: "disabled", Operators: []string{"<>", "="}, Require: plugin.Optional},
 			},
 		},
 		Columns: []*plugin.Column{
@@ -157,6 +161,11 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Name:        "ou",
 				Description: "Organizational Unit to which the user belongs to.",
 				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "disabled",
+				Description: "Whether the user account is disabled.",
+				Type:        proto.ColumnType_BOOL,
 			},
 
 			// Other Columns
@@ -252,6 +261,7 @@ func getUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (i
 			UserPrincipalName: entry.GetAttributeValue("userPrincipalName"),
 			MemberOf:          entry.GetAttributeValues("memberOf"),
 			Attributes:        transformAttributes(entry.Attributes),
+			Disabled:          verifyUserDisabled(ctx, entry),
 		}
 
 		// Populate Time fields
@@ -346,6 +356,7 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 				UserPrincipalName: entry.GetAttributeValue("userPrincipalName"),
 				MemberOf:          entry.GetAttributeValues("memberOf"),
 				Attributes:        transformAttributes(entry.Attributes),
+				Disabled:          verifyUserDisabled(ctx, entry),
 			}
 
 			if keyQuals["filter"] != nil {
@@ -383,4 +394,26 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 	}
 
 	return nil, nil
+}
+
+func verifyUserDisabled(ctx context.Context, entry *ldap.Entry) *bool {
+	var disabled bool
+	userAccountControl := entry.GetAttributeValue("userAccountControl")
+	if userAccountControl == "" {
+		return nil
+	}
+	control, err := strconv.Atoi(userAccountControl)
+	if err != nil {
+		plugin.Logger(ctx).Error("ldap_user.verifyUserDisabled", "Error while converting userAccountControl to integer", err)
+		return nil
+	}
+	// If the masking of the second bit returns 2, it means that the account is disabled
+	// Refer - http://www.selfadsi.org/ads-attributes/user-userAccountControl.htm
+	if control&2 == 2 {
+		disabled = true
+	}
+	if control&2 != 2 {
+		disabled = false
+	}
+	return &disabled
 }

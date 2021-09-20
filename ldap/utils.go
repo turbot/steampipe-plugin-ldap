@@ -21,6 +21,9 @@ const PageSize uint32 = 1000
 // Define the time filter timestamo format
 const FilterTimestampFormat = "20060102150405.000Z"
 
+// Disabled User Filter
+const DisabledUserFilter = "(userAccountControl:1.2.840.113556.1.4.803:=2)"
+
 func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 
 	// Load connection from cache
@@ -179,6 +182,19 @@ func generateFilterString(keyQuals map[string]*proto.QualValue, quals map[string
 				timeString := q.Value.GetTimestampValue().AsTime().Format(FilterTimestampFormat)
 				clause := buildClause("whenChanged", timeString, q.Operator)
 				andClauses.WriteString(clause)
+			}
+		}
+
+		if quals["disabled"] != nil {
+			for _, q := range quals["disabled"].Quals {
+				value := q.Value
+				if value != nil {
+					clause := DisabledUserFilter
+					if q.Operator == "<>" {
+						clause = "(!" + clause + ")"
+					}
+					andClauses.WriteString(clause)
+				}
 			}
 		}
 	}
