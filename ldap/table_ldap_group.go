@@ -38,9 +38,7 @@ type groupRow struct {
 	// Groups to which the group belongs
 	MemberOf []string
 	// All attributes that are configured to be returned
-	Attributes []*ldap.EntryAttribute
-	// Raw data from LDAP
-	Raw []string
+	Attributes map[string][]string
 }
 
 func tableLDAPGroup(ctx context.Context) *plugin.Table {
@@ -136,12 +134,6 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 				Description: "All attributes that have been returned from LDAP.",
 				Type:        proto.ColumnType_JSON,
 			},
-			{
-				Name:        "raw",
-				Description: "All attributes along with their raw data values.",
-				Type:        proto.ColumnType_JSON,
-				Transform:   transform.FromValue(),
-			},
 
 			// Steampipe Columns
 			{
@@ -189,7 +181,7 @@ func getGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (
 			ObjectSid:      getObjectSid(entry),
 			SamAccountName: entry.GetAttributeValue("sAMAccountName"),
 			MemberOf:       entry.GetAttributeValues("memberOf"),
-			Attributes:     entry.Attributes,
+			Attributes:     transformAttributes(entry.Attributes),
 		}
 
 		// Populate Time fields
@@ -271,7 +263,7 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 				ObjectSid:      getObjectSid(entry),
 				SamAccountName: entry.GetAttributeValue("sAMAccountName"),
 				MemberOf:       entry.GetAttributeValues("memberOf"),
-				Attributes:     entry.Attributes,
+				Attributes:     transformAttributes(entry.Attributes),
 			}
 
 			if keyQuals["filter"] != nil {

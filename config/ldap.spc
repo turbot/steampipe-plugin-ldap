@@ -3,16 +3,19 @@ connection "ldap" {
 
   # The following set of properties are mandatory for the ldap plugin to make a connection to the server
   # Distinguished name of the user which will be used to bind to the server
-  # username   = "CN=Admin,OU=Users,DC=example,DC=domain,DC=com"
+  # username   = "CN=Admin,OU=Users,DC=domain,DC=example,DC=com"
 
   # The corresponding password of the user defined above
   # password   = "55j%@8Rn[Ct8#\Mm"
 
-  # Url to which the plugin will connect to in the format -> <ip-address>:<port>
-  # url        = "10.84.11.5:389"
+  # Host to which the plugin will connect to e.g. ad.example.com, ldap.example.com etc.
+  # host        = "domain.example.com"
+
+  # Port on which the directory server is listening i.e. 389, 636 etc.
+  # port       =  "389"
 
   # Distinguished name of the base object on which queries will be executed
-  # base_dn    = "DC=example,DC=domain,DC=com"
+  # base_dn    = "DC=domain,DC=example,DC=com"
 
   # Fixed set of attributes that will be requested for each LDAP query. This attribute list is shared across all tables.
   # If nothing is provided, Steampipe will request for all attributes

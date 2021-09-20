@@ -12,7 +12,8 @@ type ldapConfig struct {
 	TLSInsecureSkipVerify *bool    `cty:"tls_insecure_skip_verify"`
 	Username              *string  `cty:"username"`
 	Password              *string  `cty:"password"`
-	URL                   *string  `cty:"url"`
+	Host                  *string  `cty:"host"`
+	Port                  *string  `cty:"port"`
 	UserObjectFilter      *string  `cty:"user_object_filter"`
 }
 
@@ -36,7 +37,10 @@ var ConfigSchema = map[string]*schema.Attribute{
 	"tls_insecure_skip_verify": {
 		Type: schema.TypeBool,
 	},
-	"url": {
+	"host": {
+		Type: schema.TypeString,
+	},
+	"port": {
 		Type: schema.TypeString,
 	},
 	"user_object_filter": {

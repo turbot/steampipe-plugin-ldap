@@ -32,9 +32,7 @@ type organizationalUnitRow struct {
 	// Entity that manages the Organizational Unit
 	ManagedBy string
 	// All attributes that are configured to be returned
-	Attributes []*ldap.EntryAttribute
-	// Raw data from LDAP
-	Raw []string
+	Attributes map[string][]string
 }
 
 func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
@@ -112,12 +110,6 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 				Description: "All attributes that have been returned from LDAP.",
 				Type:        proto.ColumnType_JSON,
 			},
-			{
-				Name:        "raw",
-				Description: "All attributes along with their raw data values.",
-				Type:        proto.ColumnType_JSON,
-				Transform:   transform.FromValue(),
-			},
 
 			// Steampipe Columns
 			{
@@ -161,7 +153,7 @@ func getOrganizationalUnit(ctx context.Context, d *plugin.QueryData, h *plugin.H
 			Description: entry.GetAttributeValue("description"),
 			ObjectClass: entry.GetAttributeValues("objectClass"),
 			ManagedBy:   entry.GetAttributeValue("managedBy"),
-			Attributes:  entry.Attributes,
+			Attributes:  transformAttributes(entry.Attributes),
 		}
 
 		// Populate Time fields
@@ -239,7 +231,7 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 				Description: entry.GetAttributeValue("description"),
 				ObjectClass: entry.GetAttributeValues("objectClass"),
 				ManagedBy:   entry.GetAttributeValue("managedBy"),
-				Attributes:  entry.Attributes,
+				Attributes:  transformAttributes(entry.Attributes),
 			}
 
 			if keyQuals["filter"] != nil {

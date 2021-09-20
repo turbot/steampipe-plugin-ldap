@@ -29,7 +29,7 @@ func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 		return cachedData.(*ldap.Conn), nil
 	}
 
-	var username, password, url, baseDN string
+	var username, password, host, port, baseDN string
 	tlsRequired := false
 	tlsInsecureSkipVerify := false
 
@@ -41,8 +41,11 @@ func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 		if ldapConfig.Password != nil {
 			password = *ldapConfig.Password
 		}
-		if ldapConfig.URL != nil {
-			url = *ldapConfig.URL
+		if ldapConfig.Host != nil {
+			host = *ldapConfig.Host
+		}
+		if ldapConfig.Port != nil {
+			port = *ldapConfig.Port
 		}
 		if ldapConfig.TLSRequired != nil {
 			tlsRequired = *ldapConfig.TLSRequired
@@ -62,8 +65,11 @@ func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 	if password == "" {
 		return nil, errors.New("'password' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
 	}
-	if url == "" {
-		return nil, errors.New("'url' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
+	if host == "" {
+		return nil, errors.New("'host' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
+	}
+	if port == "" {
+		return nil, errors.New("'port' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
 	}
 	if baseDN == "" {
 		return nil, errors.New("'base_dn' must be set in the connection configuration. Edit your connection configuration file and then restart Steampipe")
@@ -73,10 +79,10 @@ func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 	var connErr error
 
 	if tlsRequired {
-		ldapURL := fmt.Sprintf("ldaps://%s", url)
+		ldapURL := fmt.Sprintf("ldaps://%s:%s", host, port)
 		ldapConn, connErr = ldap.DialURL(ldapURL, ldap.DialWithTLSConfig(&tls.Config{InsecureSkipVerify: tlsInsecureSkipVerify}))
 	} else {
-		ldapURL := fmt.Sprintf("ldap://%s", url)
+		ldapURL := fmt.Sprintf("ldap://%s:%s", host, port)
 		ldapConn, connErr = ldap.DialURL(ldapURL)
 	}
 
@@ -223,4 +229,12 @@ func convertToTimestamp(ctx context.Context, str string) *time.Time {
 	}
 	// Return the converted time if conversion is successful
 	return &t
+}
+
+func transformAttributes(attributes []*ldap.EntryAttribute) map[string][]string {
+	var data = make(map[string][]string)
+	for _, attribute := range attributes {
+		data[attribute.Name] = attribute.Values
+	}
+	return data
 }
