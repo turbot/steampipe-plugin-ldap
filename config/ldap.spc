@@ -23,8 +23,8 @@ connection "ldap" {
 
   # Should be set to true if you want to secure communications via SSL/Transport Layer Security(TLS) technology
   # tls_required = false
-  # Set to true for TLS accepting any certificate presented by the server and any host name in that certificate
-  # tls_insecure_skip_verify = true
+  # TLS Insecure Skip Verify will be hard-coded to 'true' for this version. Hence, a certificate is not needed if TLS is enabled
+  # Certificate verification will be introduced in a later version
 
   # Optional user object filter to be used to filter objects. If not provided, defaults to - "(&(objectCategory=person)(objectClass=user))"
   # user_object_filter = "(&(objectCategory=person)(objectClass=user))"

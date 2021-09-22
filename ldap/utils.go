@@ -34,7 +34,7 @@ func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 
 	var username, password, host, port, baseDN string
 	tlsRequired := false
-	tlsInsecureSkipVerify := false
+	tlsInsecureSkipVerify := true
 
 	ldapConfig := GetConfig(d.Connection)
 	if &ldapConfig != nil {
@@ -52,9 +52,6 @@ func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 		}
 		if ldapConfig.TLSRequired != nil {
 			tlsRequired = *ldapConfig.TLSRequired
-		}
-		if ldapConfig.TLSInsecureSkipVerify != nil {
-			tlsInsecureSkipVerify = *ldapConfig.TLSInsecureSkipVerify
 		}
 		if ldapConfig.BaseDN != nil {
 			baseDN = *ldapConfig.BaseDN
