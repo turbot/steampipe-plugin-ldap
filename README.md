@@ -1,4 +1,4 @@
-# Add image here
+![image](https://hub.steampipe.io/images/plugins/turbot/ldap-social-graphic.png)
 
 # LDAP Plugin for Steampipe
 
