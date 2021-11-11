@@ -179,13 +179,11 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 	var pageSize uint32 = PageSize
 
 	ldapConfig := GetConfig(d.Connection)
-	if &ldapConfig != nil {
-		if ldapConfig.BaseDN != nil {
-			baseDN = *ldapConfig.BaseDN
-		}
-		if ldapConfig.Attributes != nil {
-			attributes = ldapConfig.Attributes
-		}
+	if ldapConfig.BaseDN != nil {
+		baseDN = *ldapConfig.BaseDN
+	}
+	if ldapConfig.Attributes != nil {
+		attributes = ldapConfig.Attributes
 	}
 
 	keyQuals := d.KeyColumnQuals
@@ -248,8 +246,8 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 
 			d.StreamListItem(ctx, row)
 
-			// Stop stearming items if the limit has been hit or in case of manual cancellation
-			if plugin.IsCancelled(ctx) {
+			// Check if context has been cancelled or if the limit has been hit (if specified)
+			if d.QueryStatus.RowsRemaining(ctx) == 0 {
 				return nil, nil
 			}
 		}

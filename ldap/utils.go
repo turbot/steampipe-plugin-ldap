@@ -37,25 +37,23 @@ func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 	tlsInsecureSkipVerify := true
 
 	ldapConfig := GetConfig(d.Connection)
-	if &ldapConfig != nil {
-		if ldapConfig.Username != nil {
-			username = *ldapConfig.Username
-		}
-		if ldapConfig.Password != nil {
-			password = *ldapConfig.Password
-		}
-		if ldapConfig.Host != nil {
-			host = *ldapConfig.Host
-		}
-		if ldapConfig.Port != nil {
-			port = *ldapConfig.Port
-		}
-		if ldapConfig.TLSRequired != nil {
-			tlsRequired = *ldapConfig.TLSRequired
-		}
-		if ldapConfig.BaseDN != nil {
-			baseDN = *ldapConfig.BaseDN
-		}
+	if ldapConfig.Username != nil {
+		username = *ldapConfig.Username
+	}
+	if ldapConfig.Password != nil {
+		password = *ldapConfig.Password
+	}
+	if ldapConfig.Host != nil {
+		host = *ldapConfig.Host
+	}
+	if ldapConfig.Port != nil {
+		port = *ldapConfig.Port
+	}
+	if ldapConfig.TLSRequired != nil {
+		tlsRequired = *ldapConfig.TLSRequired
+	}
+	if ldapConfig.BaseDN != nil {
+		baseDN = *ldapConfig.BaseDN
 	}
 
 	// Check for all required config args
