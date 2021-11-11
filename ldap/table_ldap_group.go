@@ -44,7 +44,7 @@ type groupRow struct {
 func tableLDAPGroup(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "ldap_group",
-		Description: "LDAP Group",
+		Description: "A group is a collection of digital identities i.e. users, groups etc.",
 		Get: &plugin.GetConfig{
 			KeyColumns:        plugin.SingleColumn("dn"),
 			ShouldIgnoreError: isNotFoundError([]string{"InvalidVolume.NotFound", "InvalidParameterValue"}),
@@ -67,32 +67,37 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 			// Top Columns
 			{
 				Name:        "dn",
-				Description: "Distinguished Name of the group.",
+				Description: "Distinguished name of the group.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "cn",
-				Description: "Common Name/Full Name of the group.",
+				Description: "Common/Full name of the group.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "object_sid",
+				Description: "The security identifier (SID) of the group.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "ou",
-				Description: "Organizational Unit to which the group belongs to.",
+				Description: "Organizational unit to which the group belongs to.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "sam_account_name",
-				Description: "SAM Account Name of the group.",
+				Description: "SAM Account name of the group.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "created",
-				Description: "Date & Time the group was created.",
+				Description: "Date & time the group was created.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "changed",
-				Description: "Date & Time the group was last modified.",
+				Description: "Date & time the group was last modified.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 
@@ -104,17 +109,12 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 			},
 			{
 				Name:        "base_dn",
-				Description: "The Base DN on which the search was performed.",
+				Description: "The Base distinguished name on which the search was performed.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "filter",
 				Description: "Optional custom filter passed.",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
-				Name:        "object_sid",
-				Description: "Object SID of the group.",
 				Type:        proto.ColumnType_STRING,
 			},
 
@@ -126,7 +126,7 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 			},
 			{
 				Name:        "object_class",
-				Description: "Object Classes of the group.",
+				Description: "Object classes of the group.",
 				Type:        proto.ColumnType_JSON,
 			},
 			{
@@ -228,9 +228,9 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 		}
 	}
 
-	logger.Warn("baseDN", baseDN)
-	logger.Warn("filter", filter)
-	logger.Warn("attributes", attributes)
+	logger.Info("baseDN", baseDN)
+	logger.Info("filter", filter)
+	logger.Info("attributes", attributes)
 
 	var searchReq *ldap.SearchRequest
 	paging := ldap.NewControlPaging(pageSize)

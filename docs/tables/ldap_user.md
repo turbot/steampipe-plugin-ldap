@@ -2,7 +2,7 @@
 
 A user is known as the customer or end-user.
 
-Note: This table supports an optional `filter` column to query results based on the LDAP [filter](https://ldap.com/ldap-filters/) language.
+**Note:** This table supports an optional `filter` column to query results based on the LDAP [filter](https://ldap.com/ldap-filters/) language.
 
 ## Examples
 

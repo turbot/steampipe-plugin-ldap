@@ -94,27 +94,32 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 			// Top Columns
 			{
 				Name:        "dn",
-				Description: "Distinguished Name of the user.",
+				Description: "Distinguished name of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "cn",
-				Description: "Full Name of the user.",
+				Description: "Full name of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "display_name",
-				Description: "Display Name of the user.",
+				Description: "Display name of the user.",
+				Type:        proto.ColumnType_STRING,
+			},
+			{
+				Name:        "object_sid",
+				Description: "The security identifier (SID) of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "given_name",
-				Description: "Given Name of the user.",
+				Description: "Given name of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "surname",
-				Description: "Family Name of the user.",
+				Description: "Family name of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
@@ -134,32 +139,32 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 			},
 			{
 				Name:        "created",
-				Description: "Date & Time the user was created.",
+				Description: "Date & time the user was created.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "changed",
-				Description: "Date & Time the user was last modified.",
+				Description: "Date & time the user was last modified.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "sam_account_name",
-				Description: "Logon Name (pre-Windows 2000) of the user.",
+				Description: "Logon name (pre-Windows 2000) of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "user_principal_name",
-				Description: "Logon Name of the user.",
+				Description: "Logon name of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "job_title",
-				Description: "Job Title of the user.",
+				Description: "Job title of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "ou",
-				Description: "Organizational Unit to which the user belongs to.",
+				Description: "Organizational unit to which the user belongs to.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
@@ -176,17 +181,12 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 			},
 			{
 				Name:        "base_dn",
-				Description: "The Base DN on which the search was performed.",
+				Description: "The Base distinguished name on which the search was performed.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "filter",
 				Description: "Optional custom filter passed.",
-				Type:        proto.ColumnType_STRING,
-			},
-			{
-				Name:        "object_sid",
-				Description: "Object SID of the user.",
 				Type:        proto.ColumnType_STRING,
 			},
 
@@ -198,7 +198,7 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 			},
 			{
 				Name:        "object_class",
-				Description: "Object Classes of the user.",
+				Description: "Object classes of the user.",
 				Type:        proto.ColumnType_JSON,
 			},
 			{
@@ -314,9 +314,9 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 		}
 	}
 
-	logger.Warn("baseDN", baseDN)
-	logger.Warn("filter", filter)
-	logger.Warn("attributes", attributes)
+	logger.Info("baseDN", baseDN)
+	logger.Info("filter", filter)
+	logger.Info("attributes", attributes)
 
 	var searchReq *ldap.SearchRequest
 	paging := ldap.NewControlPaging(pageSize)

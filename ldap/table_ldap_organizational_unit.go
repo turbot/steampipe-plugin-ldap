@@ -200,9 +200,9 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 		}
 	}
 
-	logger.Warn("baseDN", baseDN)
-	logger.Warn("filter", filter)
-	logger.Warn("attributes", attributes)
+	logger.Info("baseDN", baseDN)
+	logger.Info("filter", filter)
+	logger.Info("attributes", attributes)
 
 	var searchReq *ldap.SearchRequest
 	paging := ldap.NewControlPaging(pageSize)

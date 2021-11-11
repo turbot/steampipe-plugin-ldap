@@ -2,7 +2,7 @@
 
 An organizational unit contains users, computers, groups etc.
 
-Note: This table supports an optional `filter` column to query results based on the LDAP [filter](https://ldap.com/ldap-filters/) language.
+**Note:** This table supports an optional `filter` column to query results based on the LDAP [filter](https://ldap.com/ldap-filters/) language.
 
 ## Examples
 
@@ -44,13 +44,13 @@ where
 ### List all organizational units that are critical system objects and cannot be deleted without replacement
 
 ```sql
-select 
-  dn, 
-  ou, 
-  created, 
-  managed_by 
-from 
-  ldap_organizational_unit 
-where 
+select
+  dn,
+  ou,
+  created,
+  managed_by
+from
+  ldap_organizational_unit
+where
   attributes->'isCriticalSystemObject' ? 'TRUE';
 ```

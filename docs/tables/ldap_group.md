@@ -2,7 +2,7 @@
 
 A group is a collection of digital identities i.e. users, groups etc.
 
-Note: This table supports an optional `filter` column to query results based on the LDAP [filter](https://ldap.com/ldap-filters/) language.
+**Note:** This table supports an optional `filter` column to query results based on the LDAP [filter](https://ldap.com/ldap-filters/) language.
 
 ## Examples
 
