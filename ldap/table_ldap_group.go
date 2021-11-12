@@ -220,7 +220,7 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 	// default value for the group object filter if nothing is passed
 	groupObjectFilter = "(objectClass=group)"
 
-	filter := generateFilterString(keyQuals, quals, groupObjectFilter)
+	filter := generateFilterString(logger, keyQuals, quals, groupObjectFilter)
 
 	if d.QueryContext.Limit != nil {
 		if uint32(*d.QueryContext.Limit) < pageSize {
@@ -245,7 +245,7 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 
 		result, err := search(ctx, d, searchReq)
 		if err != nil {
-			plugin.Logger(ctx).Error("ldap_group.listGroups", "search_error", err)
+			logger.Error("ldap_group.listGroups", "search_error", err)
 			return nil, err
 		}
 

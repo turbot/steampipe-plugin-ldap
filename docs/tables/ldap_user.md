@@ -74,8 +74,7 @@ where
 select
   dn,
   sam_account_name,
-  mail,
-  department
+  mail
 from
   ldap_user
 where
