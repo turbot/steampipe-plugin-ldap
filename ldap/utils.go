@@ -10,7 +10,6 @@ import (
 
 	"github.com/bwmarrin/go-objectsid"
 	"github.com/go-ldap/ldap/v3"
-	"github.com/hashicorp/go-hclog"
 	"github.com/iancoleman/strcase"
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
@@ -144,7 +143,7 @@ func isNotFoundError(notFoundErrors []string) plugin.ErrorPredicate {
 	}
 }
 
-func generateFilterString(logger hclog.Logger, keyQuals map[string]*proto.QualValue, quals map[string]*plugin.KeyColumnQuals, objectFilter string) string {
+func generateFilterString(keyQuals map[string]*proto.QualValue, quals map[string]*plugin.KeyColumnQuals, objectFilter string) string {
 	var andClauses strings.Builder
 
 	if keyQuals["filter"] != nil {
@@ -194,8 +193,6 @@ func generateFilterString(logger hclog.Logger, keyQuals map[string]*proto.QualVa
 			}
 		}
 	}
-
-	logger.Info("generateFilterString", "andClauses", andClauses)
 
 	return "(&" + objectFilter + andClauses.String() + ")"
 }

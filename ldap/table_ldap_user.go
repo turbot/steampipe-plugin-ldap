@@ -306,7 +306,7 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 		userObjectFilter = "(&(objectCategory=person)(objectClass=user))"
 	}
 
-	filter := generateFilterString(logger, keyQuals, quals, userObjectFilter)
+	filter := generateFilterString(keyQuals, quals, userObjectFilter)
 
 	if d.QueryContext.Limit != nil {
 		if uint32(*d.QueryContext.Limit) < pageSize {
@@ -331,7 +331,7 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 
 		result, err := search(ctx, d, searchReq)
 		if err != nil {
-			logger.Error("ldap_user.listUsers", "search_error", err)
+			plugin.Logger(ctx).Error("ldap_user.listUsers", "search_error", err)
 			return nil, err
 		}
 

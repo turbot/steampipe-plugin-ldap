@@ -192,7 +192,7 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 	// default value for the organizational unit object filter if nothing is passed
 	organizationalUnitObjectFilter = "(objectClass=organizationalUnit)"
 
-	filter := generateFilterString(logger, keyQuals, quals, organizationalUnitObjectFilter)
+	filter := generateFilterString(keyQuals, quals, organizationalUnitObjectFilter)
 
 	if d.QueryContext.Limit != nil {
 		if uint32(*d.QueryContext.Limit) < pageSize {
