@@ -164,16 +164,16 @@ func generateFilterString(keyQuals map[string]*proto.QualValue, quals map[string
 		}
 
 		// Get individual quals
-		if quals["created"] != nil {
-			for _, q := range quals["created"].Quals {
+		if quals["created_on"] != nil {
+			for _, q := range quals["created_on"].Quals {
 				timeString := q.Value.GetTimestampValue().AsTime().Format(FilterTimestampFormat)
 				clause := buildClause("whenCreated", timeString, q.Operator)
 				andClauses.WriteString(clause)
 			}
 		}
 
-		if quals["changed"] != nil {
-			for _, q := range quals["changed"].Quals {
+		if quals["modified_on"] != nil {
+			for _, q := range quals["modified_on"].Quals {
 				timeString := q.Value.GetTimestampValue().AsTime().Format(FilterTimestampFormat)
 				clause := buildClause("whenChanged", timeString, q.Operator)
 				andClauses.WriteString(clause)

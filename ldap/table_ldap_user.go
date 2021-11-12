@@ -31,9 +31,9 @@ type userRow struct {
 	// Email id
 	Mail string
 	// Create Date
-	Created *time.Time
+	CreatedOn *time.Time
 	// Modified Date
-	Changed *time.Time
+	ModifiedOn *time.Time
 	// Object Class
 	ObjectClass []string
 	// Organizational Unit to which the user belongs
@@ -85,8 +85,8 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				{Name: "user_principal_name", Require: plugin.Optional},
 				{Name: "description", Require: plugin.Optional},
 				{Name: "job_title", Require: plugin.Optional},
-				{Name: "created", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
-				{Name: "changed", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
+				{Name: "created_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
+				{Name: "modified_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
 				{Name: "disabled", Operators: []string{"<>", "="}, Require: plugin.Optional},
 			},
 		},
@@ -138,12 +138,12 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Type:        proto.ColumnType_STRING,
 			},
 			{
-				Name:        "created",
+				Name:        "created_on",
 				Description: "Date & time the user was created.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
-				Name:        "changed",
+				Name:        "modified_on",
 				Description: "Date & time the user was last modified.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
@@ -266,10 +266,10 @@ func getUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (i
 
 		// Populate Time fields
 		if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))) {
-			row.Created = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
+			row.CreatedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
 		}
 		if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))) {
-			row.Changed = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
+			row.ModifiedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
 		}
 
 		return row, nil
@@ -364,10 +364,10 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 
 			// Populate Time fields
 			if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))) {
-				row.Created = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
+				row.CreatedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
 			}
 			if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))) {
-				row.Changed = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
+				row.ModifiedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
 			}
 
 			d.StreamListItem(ctx, row)

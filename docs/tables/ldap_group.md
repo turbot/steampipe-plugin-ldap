@@ -13,7 +13,7 @@ select
   dn,
   cn,
   ou,
-  created,
+  created_on,
   sam_account_name
 from
   ldap_group;
@@ -36,11 +36,11 @@ from
 select
   dn,
   sam_account_name,
-  created
+  created_on
 from
   ldap_group
 where
-  created > current_timestamp - interval '30 days';
+  created_on > current_timestamp - interval '30 days';
 ```
 
 ### Get details of group 'Database' and the groups which it is a member of

@@ -12,7 +12,7 @@ An organizational unit contains users, computers, groups etc.
 select
   dn,
   ou,
-  created
+  created_on
 from
   ldap_organizational_unit;
 ```
@@ -22,7 +22,7 @@ from
 ```sql
 select
   ou,
-  created,
+  created_on,
   managed_by
 from
   ldap_organizational_unit;
@@ -34,11 +34,11 @@ from
 select
   dn,
   ou,
-  created
+  created_on
 from
   ldap_organizational_unit
 where
-  created > current_timestamp - interval '30 days';
+  created_on > current_timestamp - interval '30 days';
 ```
 
 ### List all organizational units that are critical system objects and cannot be deleted without replacement
@@ -47,7 +47,7 @@ where
 select
   dn,
   ou,
-  created,
+  created_on,
   managed_by
 from
   ldap_organizational_unit

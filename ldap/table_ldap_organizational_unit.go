@@ -22,9 +22,9 @@ type organizationalUnitRow struct {
 	// Description
 	Description string
 	// Create Date
-	Created *time.Time
+	CreatedOn *time.Time
 	// Modified Date
-	Changed *time.Time
+	ModifiedOn *time.Time
 	// Object Class
 	ObjectClass []string
 	// Title
@@ -50,8 +50,8 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 				{Name: "filter", Require: plugin.Optional},
 				{Name: "ou", Require: plugin.Optional},
 				{Name: "description", Require: plugin.Optional},
-				{Name: "created", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
-				{Name: "changed", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
+				{Name: "created_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
+				{Name: "modified_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
 			},
 		},
 		Columns: []*plugin.Column{
@@ -72,12 +72,12 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 				Type:        proto.ColumnType_STRING,
 			},
 			{
-				Name:        "created",
+				Name:        "created_on",
 				Description: "Date & Time the organizational unit was created.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
-				Name:        "changed",
+				Name:        "modified_on",
 				Description: "Date & Time the organizational unit was last modified.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
@@ -158,10 +158,10 @@ func getOrganizationalUnit(ctx context.Context, d *plugin.QueryData, h *plugin.H
 
 		// Populate Time fields
 		if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))) {
-			row.Created = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
+			row.CreatedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
 		}
 		if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))) {
-			row.Changed = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
+			row.ModifiedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
 		}
 
 		return row, nil
@@ -238,10 +238,10 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 
 			// Populate Time fields
 			if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))) {
-				row.Created = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
+				row.CreatedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
 			}
 			if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))) {
-				row.Changed = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
+				row.ModifiedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
 			}
 
 			d.StreamListItem(ctx, row)

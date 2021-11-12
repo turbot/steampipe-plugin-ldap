@@ -2,7 +2,28 @@
 
 A user is known as the customer or end-user.
 
-**Note:** This table supports an optional `filter` column to query results based on the LDAP [filter](https://ldap.com/ldap-filters/) language.
+**Important notes:**
+
+This table supports optional quals. Queries with optional quals in `where` clause are optimised to use ldap filters.
+
+Optional quals are supported for the following columns:
+
+- `filter` - Allows use of explicit query. Refer [LDAP filter language](https://ldap.com/ldap-filters/)
+- `changed`
+- `cn`
+- `created_on`
+- `description`
+- `disabled`
+- `display_name`
+- `given_name`
+- `job_title`
+- `log_stream_name`
+- `mail`
+- `object_sid`
+- `ou`
+- `sam_account_name`
+- `surname`
+- `user_principal_name`
 
 ## Examples
 
@@ -13,26 +34,27 @@ select
   dn,
   cn,
   initials,
-  created,
+  created_on,
   mail,
   department,
   sam_account_name
 from
-  ldap_user;
+  ldap_user limit 100;
 ```
 
 ### Get logon name, e-mail, and groups that each user is a member of
 
 ```sql
 select
-  sam_account_name,
+  user_principal_name,
+  display_name,
   mail,
   jsonb_pretty(member_of) as user_groups
 from
   ldap_user;
 ```
 
-### Get details of users whose account is disabled
+### List disabled users
 
 ```sql
 select
@@ -67,11 +89,11 @@ select
   dn,
   sam_account_name,
   mail,
-  created
+  created_on
 from
   ldap_user
 where
-  created > current_timestamp - interval '30 days';
+  created_on > current_timestamp - interval '30 days';
 ```
 
 ### Get details of user 'Adelhard Frey' and the groups which he is a member of
@@ -103,7 +125,7 @@ select
   dn,
   sam_account_name,
   mail,
-  created
+  created_on
 from
   ldap_user
 where

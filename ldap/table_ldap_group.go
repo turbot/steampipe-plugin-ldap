@@ -22,9 +22,9 @@ type groupRow struct {
 	// Description
 	Description string
 	// Create Date
-	Created *time.Time
+	CreatedOn *time.Time
 	// Modified Date
-	Changed *time.Time
+	ModifiedOn *time.Time
 	// Object Class
 	ObjectClass []string
 	// Organizational Unit to which the group belongs
@@ -59,8 +59,8 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 				{Name: "object_sid", Require: plugin.Optional},
 				{Name: "sam_account_name", Require: plugin.Optional},
 				{Name: "description", Require: plugin.Optional},
-				{Name: "created", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
-				{Name: "changed", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
+				{Name: "created_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
+				{Name: "modified_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
 			},
 		},
 		Columns: []*plugin.Column{
@@ -91,12 +91,12 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 				Type:        proto.ColumnType_STRING,
 			},
 			{
-				Name:        "created",
+				Name:        "created_on",
 				Description: "Date & time the group was created.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
-				Name:        "changed",
+				Name:        "modified_on",
 				Description: "Date & time the group was last modified.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
@@ -186,10 +186,10 @@ func getGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (
 
 		// Populate Time fields
 		if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))) {
-			row.Created = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
+			row.CreatedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
 		}
 		if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))) {
-			row.Changed = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
+			row.ModifiedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
 		}
 
 		return row, nil
@@ -270,10 +270,10 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 
 			// Populate Time fields
 			if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))) {
-				row.Created = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
+				row.CreatedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
 			}
 			if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))) {
-				row.Changed = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
+				row.ModifiedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
 			}
 
 			d.StreamListItem(ctx, row)
