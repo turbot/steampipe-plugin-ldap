@@ -76,7 +76,6 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				{Name: "cn", Require: plugin.Optional},
 				{Name: "surname", Require: plugin.Optional},
 				{Name: "mail", Require: plugin.Optional},
-				{Name: "ou", Require: plugin.Optional},
 				{Name: "display_name", Require: plugin.Optional},
 				{Name: "given_name", Require: plugin.Optional},
 				{Name: "department", Require: plugin.Optional},
@@ -84,10 +83,11 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				{Name: "sam_account_name", Require: plugin.Optional},
 				{Name: "user_principal_name", Require: plugin.Optional},
 				{Name: "description", Require: plugin.Optional},
-				{Name: "job_title", Require: plugin.Optional},
 				{Name: "created_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
 				{Name: "modified_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
 				{Name: "disabled", Operators: []string{"<>", "="}, Require: plugin.Optional},
+				// {Name: "ou", Require: plugin.Optional}, - Not working
+				// {Name: "job_title", Require: plugin.Optional}, - Not working
 			},
 		},
 		Columns: []*plugin.Column{

@@ -147,7 +147,14 @@ func generateFilterString(keyQuals map[string]*proto.QualValue, quals map[string
 	var andClauses strings.Builder
 
 	if keyQuals["filter"] != nil {
-		andClauses.WriteString(keyQuals["filter"].GetStringValue())
+		val := keyQuals["filter"].GetStringValue()
+		if !strings.HasPrefix(val, "(") {
+			val = fmt.Sprintf("(%s", val)
+		}
+		if !strings.HasSuffix(val, ")") {
+			val = fmt.Sprintf("%s)", val)
+		}
+		andClauses.WriteString(val)
 	} else {
 		// Range over the key quals
 		for key, value := range keyQuals {
@@ -155,6 +162,9 @@ func generateFilterString(keyQuals map[string]*proto.QualValue, quals map[string
 				continue
 			}
 			var clause string
+			if ldapDisplayNames[key] != "" {
+				key = ldapDisplayNames[key]
+			}
 			if value.GetStringValue() != "" {
 				clause = buildClause(key, value.GetStringValue(), "=")
 			} else if value.GetListValue() != nil {
@@ -248,4 +258,10 @@ func transformAttributes(attributes []*ldap.EntryAttribute) map[string][]string 
 		data[attribute.Name] = attribute.Values
 	}
 	return data
+}
+
+// Map containing column name to ldap display name mapping for properties having differrent column name and ldap display name.
+// https://docs.microsoft.com/en-us/windows/win32/adschema/attributes-all
+var ldapDisplayNames = map[string]string{
+	"surname": "sn",
 }
