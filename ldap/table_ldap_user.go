@@ -260,7 +260,7 @@ func getUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (i
 			SamAccountName:    entry.GetAttributeValue("sAMAccountName"),
 			UserPrincipalName: entry.GetAttributeValue("userPrincipalName"),
 			MemberOf:          entry.GetAttributeValues("memberOf"),
-			Attributes:        transformAttributes(entry.Attributes),
+			Attributes:        transformAttributes(logger, entry.Attributes),
 			Disabled:          verifyUserDisabled(ctx, entry),
 		}
 
@@ -354,7 +354,7 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 				SamAccountName:    entry.GetAttributeValue("sAMAccountName"),
 				UserPrincipalName: entry.GetAttributeValue("userPrincipalName"),
 				MemberOf:          entry.GetAttributeValues("memberOf"),
-				Attributes:        transformAttributes(entry.Attributes),
+				Attributes:        transformAttributes(logger, entry.Attributes),
 				Disabled:          verifyUserDisabled(ctx, entry),
 			}
 

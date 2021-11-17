@@ -181,7 +181,7 @@ func getGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (
 			ObjectSid:      getObjectSid(entry),
 			SamAccountName: entry.GetAttributeValue("sAMAccountName"),
 			MemberOf:       entry.GetAttributeValues("memberOf"),
-			Attributes:     transformAttributes(entry.Attributes),
+			Attributes:     transformAttributes(logger,entry.Attributes),
 		}
 
 		// Populate Time fields
@@ -261,7 +261,7 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 				ObjectSid:      getObjectSid(entry),
 				SamAccountName: entry.GetAttributeValue("sAMAccountName"),
 				MemberOf:       entry.GetAttributeValues("memberOf"),
-				Attributes:     transformAttributes(entry.Attributes),
+				Attributes:     transformAttributes(logger, entry.Attributes),
 			}
 
 			if keyQuals["filter"] != nil {

@@ -153,7 +153,7 @@ func getOrganizationalUnit(ctx context.Context, d *plugin.QueryData, h *plugin.H
 			Description: entry.GetAttributeValue("description"),
 			ObjectClass: entry.GetAttributeValues("objectClass"),
 			ManagedBy:   entry.GetAttributeValue("managedBy"),
-			Attributes:  transformAttributes(entry.Attributes),
+			Attributes:  transformAttributes(logger, entry.Attributes),
 		}
 
 		// Populate Time fields
@@ -229,7 +229,7 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 				Description: entry.GetAttributeValue("description"),
 				ObjectClass: entry.GetAttributeValues("objectClass"),
 				ManagedBy:   entry.GetAttributeValue("managedBy"),
-				Attributes:  transformAttributes(entry.Attributes),
+				Attributes:  transformAttributes(logger, entry.Attributes),
 			}
 
 			if keyQuals["filter"] != nil {

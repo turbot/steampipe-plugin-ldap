@@ -10,6 +10,7 @@ import (
 
 	"github.com/bwmarrin/go-objectsid"
 	"github.com/go-ldap/ldap/v3"
+	"github.com/hashicorp/go-hclog"
 	"github.com/iancoleman/strcase"
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
@@ -252,7 +253,8 @@ func convertToTimestamp(ctx context.Context, str string) *time.Time {
 	return &t
 }
 
-func transformAttributes(attributes []*ldap.EntryAttribute) map[string][]string {
+func transformAttributes(logger hclog.Logger, attributes []*ldap.EntryAttribute) map[string][]string {
+	logger.Info("transformAttributes", "attributes", attributes)
 	var data = make(map[string][]string)
 	for _, attribute := range attributes {
 		data[attribute.Name] = attribute.Values
