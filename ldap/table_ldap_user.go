@@ -86,8 +86,8 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				{Name: "created_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
 				{Name: "modified_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
 				{Name: "disabled", Operators: []string{"<>", "="}, Require: plugin.Optional},
-				// {Name: "ou", Require: plugin.Optional}, - Not working
-				// {Name: "job_title", Require: plugin.Optional}, - Not working
+				// {Name: "ou", Require: plugin.Optional}, // TODO: Not Working
+				// {Name: "job_title", Require: plugin.Optional}, // TODO: Not Working
 			},
 		},
 		Columns: []*plugin.Column{
@@ -201,11 +201,12 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Description: "Object classes of the user.",
 				Type:        proto.ColumnType_JSON,
 			},
-			{
-				Name:        "attributes",
-				Description: "All attributes that have been returned from LDAP.",
-				Type:        proto.ColumnType_JSON,
-			},
+			// https://github.com/turbot/steampipe-postgres-fdw/issues/118
+			// {
+			// 	Name:        "attributes",
+			// 	Description: "All attributes that have been returned from LDAP.",
+			// 	Type:        proto.ColumnType_JSON,
+			// },
 
 			// Steampipe Columns
 			{

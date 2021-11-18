@@ -60,7 +60,7 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 				{Name: "description", Require: plugin.Optional},
 				{Name: "created_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
 				{Name: "modified_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
-				// {Name: "ou", Require: plugin.Optional}, // Not Working
+				// {Name: "ou", Require: plugin.Optional}, // TODO: Not Working
 			},
 		},
 		Columns: []*plugin.Column{
@@ -181,7 +181,7 @@ func getGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (
 			ObjectSid:      getObjectSid(entry),
 			SamAccountName: entry.GetAttributeValue("sAMAccountName"),
 			MemberOf:       entry.GetAttributeValues("memberOf"),
-			Attributes:     transformAttributes(logger,entry.Attributes),
+			Attributes:     transformAttributes(logger, entry.Attributes),
 		}
 
 		// Populate Time fields

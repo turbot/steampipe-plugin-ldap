@@ -254,15 +254,9 @@ func convertToTimestamp(ctx context.Context, str string) *time.Time {
 }
 
 func transformAttributes(logger hclog.Logger, attributes []*ldap.EntryAttribute) map[string][]string {
-	logger.Info("transformAttributes", "attributes", attributes)
 	var data = make(map[string][]string)
 	for _, attribute := range attributes {
-		var value []string
-		for _, val := range attribute.ByteValues {
-			value = append(value, strings.Replace(string(val), `\u0000`, "", -1))
-		}
-
-		data[attribute.Name] = value
+		data[attribute.Name] = attribute.Values
 	}
 	return data
 }
