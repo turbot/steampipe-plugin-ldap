@@ -185,12 +185,17 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 	if ldapConfig.Attributes != nil {
 		attributes = ldapConfig.Attributes
 	}
+	if ldapConfig.OrganizationalUnitObjectFilter != nil {
+		organizationalUnitObjectFilter = *ldapConfig.OrganizationalUnitObjectFilter
+	}
 
 	keyQuals := d.KeyColumnQuals
 	quals := d.Quals
 
 	// default value for the organizational unit object filter if nothing is passed
-	organizationalUnitObjectFilter = "(objectClass=organizationalUnit)"
+	if organizationalUnitObjectFilter == "" {
+		organizationalUnitObjectFilter = "(objectClass=organizationalUnit)"
+	}
 
 	filter := generateFilterString(keyQuals, quals, organizationalUnitObjectFilter)
 

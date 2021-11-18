@@ -214,11 +214,17 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 		attributes = ldapConfig.Attributes
 	}
 
+	if ldapConfig.GroupObjectFilter != nil {
+		groupObjectFilter = *ldapConfig.GroupObjectFilter
+	}
+
 	keyQuals := d.KeyColumnQuals
 	quals := d.Quals
 
 	// default value for the group object filter if nothing is passed
-	groupObjectFilter = "(objectClass=group)"
+	if groupObjectFilter == "" {
+		groupObjectFilter = "(objectClass=group)"
+	}
 
 	filter := generateFilterString(keyQuals, quals, groupObjectFilter)
 

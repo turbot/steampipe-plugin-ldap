@@ -66,17 +66,3 @@ from
 where
   attributes->'isCriticalSystemObject' ? 'TRUE';
 ```
-
-### List groups a user is member of using user `dn` in `filter`
-
-```sql
-select
-  dn,
-  ou,
-  description,
-  created_on
-from
-  ldap_group
-where
-  filter = '(member:1.2.840.113556.1.4.1941:=CN=Ljiljana Rausch,OU=Mods,OU=VASHI,DC=vashi,DC=turbot,DC=com)';
-```

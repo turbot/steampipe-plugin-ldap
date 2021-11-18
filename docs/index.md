@@ -86,6 +86,12 @@ connection "ldap" {
 
   # Optional user object filter to be used to filter objects. If not provided, defaults to - "(&(objectCategory=person)(objectClass=user))"
   # user_object_filter = "(&(objectCategory=person)(objectClass=user))"
+
+  # Optional group object filter to be used to filter objects. If not provided, defaults to - "(objectClass=group)"
+  # group_object_filter = "(objectClass=group)"
+
+  # Optional organizational object filter to be used to filter objects. If not provided, defaults to - "(objectClass=organizationalUnit)"
+  # ou_object_filter = "(objectClass=organizationalUnit)"
 }
 ```
 
