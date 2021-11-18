@@ -129,3 +129,31 @@ from
 where
   filter = '(cn=Adam*)';
 ```
+
+### List members of a group by using group `dn` in `filter`
+
+```sql
+select
+  cn,
+  display_name,
+  created_on,
+  user_principal_name,
+  ou,
+  given_name
+from
+  ldap_user
+where
+  filter = '(memberof:1.2.840.113556.1.4.1941:=CN=Fleet,OU=Mods,OU=VASHI,DC=vashi,DC=turbot,DC=com)';
+```
+
+### Get users count for each organizational unit
+
+```sql
+select
+  ou,
+  count(*)
+from
+  ldap_user
+group by
+  ou;
+```

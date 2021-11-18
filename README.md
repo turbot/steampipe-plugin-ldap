@@ -6,7 +6,7 @@ Use SQL to query infrastructure including users, groups, organizational units an
 
 - **[Get started →](https://hub.steampipe.io/plugins/turbot/ldap)**
 - Documentation: [Table definitions & examples](https://hub.steampipe.io/plugins/turbot/ldap/tables)
-- Community: [Slack Channel](https://join.slack.com/t/steampipe/shared_invite/zt-oij778tv-lYyRTWOTMQYBVAbtPSWs3g)
+- Community: [Slack Channel](https://steampipe.io/community/join)
 - Get involved: [Issues](https://github.com/turbot/steampipe-plugin-ldap/issues)
 
 ## Quick start
@@ -33,7 +33,7 @@ Prerequisites:
 Clone:
 
 ```sh
-git clone git@github.com:turbot/steampipe-plugin-ldap
+git clone https://github.com/turbot/steampipe-plugin-ldap.git
 cd steampipe-plugin-ldap
 ```
 

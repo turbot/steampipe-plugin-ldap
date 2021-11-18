@@ -2,6 +2,18 @@
 
 An organizational unit contains users, computers, groups etc.
 
+**Important notes:**
+
+This table supports optional quals. Queries with optional quals in `where` clause are optimised to use ldap filters.
+
+Optional quals are supported for the following columns:
+
+- `filter` - Allows use of explicit query. Refer [LDAP filter language](https://ldap.com/ldap-filters/)
+- `ou`
+- `description`
+- `created_on`
+- `modified_on`
+
 **Note:** This table supports an optional `filter` column to query results based on the LDAP [filter](https://ldap.com/ldap-filters/) language.
 
 ## Examples
@@ -53,4 +65,18 @@ from
   ldap_organizational_unit
 where
   attributes->'isCriticalSystemObject' ? 'TRUE';
+```
+
+### List groups a user is member of using user `dn` in `filter`
+
+```sql
+select
+  dn,
+  ou,
+  description,
+  created_on
+from
+  ldap_group
+where
+  filter = '(member:1.2.840.113556.1.4.1941:=CN=Ljiljana Rausch,OU=Mods,OU=VASHI,DC=vashi,DC=turbot,DC=com)';
 ```

@@ -6,7 +6,7 @@ brand_color: "#CC2025"
 display_name: "Lightweight Directory Access Protocol"
 short_name: "LDAP"
 description: "Steampipe plugin for querying users, groups, organizational units and more from LDAP."
-og_description: "Query LDAP with SQL! Open source CLI. No DB required." 
+og_description: "Query LDAP with SQL! Open source CLI. No DB required."
 og_image: "/images/plugins/turbot/ldap-social-graphic.png"
 ---
 
@@ -25,7 +25,7 @@ select
   mail,
   department
 from
-  ldap_user
+  ldap_user;
 ```
 
 ```
@@ -56,7 +56,8 @@ steampipe plugin install ldap
 
 ### Configuration
 
-Installing the latest ldap plugin will create a config file (`~/.steampipe/config/ldap.spc`) with a single connection named `ldap`: 
+Installing the latest ldap plugin will create a config file (`~/.steampipe/config/ldap.spc`) with a single connection named `ldap`:
+
 ```hcl
 connection "ldap" {
   plugin     = "ldap"
@@ -88,10 +89,7 @@ connection "ldap" {
 }
 ```
 
-
-
 ## Get Involved
 
-* Open source: https://github.com/turbot/steampipe-plugin-ldap
-* Community: [Slack Channel](https://join.slack.com/t/steampipe/shared_invite/zt-oij778tv-lYyRTWOTMQYBVAbtPSWs3g)
-
+- Open source: https://github.com/turbot/steampipe-plugin-ldap
+- Community: [Slack Channel](https://steampipe.io/community/join)

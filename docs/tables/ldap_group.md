@@ -2,7 +2,19 @@
 
 A group is a collection of digital identities i.e. users, groups etc.
 
-**Note:** This table supports an optional `filter` column to query results based on the LDAP [filter](https://ldap.com/ldap-filters/) language.
+**Important notes:**
+
+This table supports optional quals. Queries with optional quals in `where` clause are optimised to use ldap filters.
+
+Optional quals are supported for the following columns:
+
+- `filter` - Allows use of explicit query. Refer [LDAP filter language](https://ldap.com/ldap-filters/)
+- `cn`
+- `object_sid`
+- `sam_account_name`
+- `description`
+- `created_on`
+- `modified_on`
 
 ## Examples
 
