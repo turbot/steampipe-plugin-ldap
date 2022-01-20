@@ -79,11 +79,6 @@ connection "ldap" {
   # If nothing is provided, Steampipe will request for all attributes
   # attributes = ["cn", "displayName", "uid"]
 
-  # Should be set to true if you want to secure communications via SSL/Transport Layer Security(TLS) technology
-  # tls_required = false
-  # Set to true for TLS accepting any certificate presented by the server and any host name in that certificate
-  # tls_insecure_skip_verify = true
-
   # Optional user object filter to be used to filter objects. If not provided, defaults to - "(&(objectCategory=person)(objectClass=user))"
   # user_object_filter = "(&(objectCategory=person)(objectClass=user))"
 
