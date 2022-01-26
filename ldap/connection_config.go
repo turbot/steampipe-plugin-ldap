@@ -12,6 +12,7 @@ type ldapConfig struct {
 	Password                       *string  `cty:"password"`
 	Host                           *string  `cty:"host"`
 	Port                           *string  `cty:"port"`
+	TLSRequired                    *bool    `cty:"tls_required"`
 	UserObjectFilter               *string  `cty:"user_object_filter"`
 	GroupObjectFilter              *string  `cty:"group_object_filter"`
 	OrganizationalUnitObjectFilter *string  `cty:"ou_object_filter"`
@@ -36,6 +37,9 @@ var ConfigSchema = map[string]*schema.Attribute{
 	},
 	"port": {
 		Type: schema.TypeString,
+	},
+	"tls_required": {
+		Type: schema.TypeBool,
 	},
 	"user_object_filter": {
 		Type: schema.TypeString,

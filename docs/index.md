@@ -1,10 +1,10 @@
 ---
 organization: Turbot
-category: ["SaaS"]
+category: ["software development"]
 icon_url: "/images/plugins/turbot/ldap.svg"
 brand_color: "#CC2025"
-display_name: "Lightweight Directory Access Protocol"
-short_name: "LDAP"
+display_name: "LDAP"
+short_name: "ldap"
 description: "Steampipe plugin for querying users, groups, organizational units and more from LDAP."
 og_description: "Query LDAP with SQL! Open source CLI. No DB required."
 og_image: "/images/plugins/turbot/ldap-social-graphic.png"
@@ -60,20 +60,26 @@ Installing the latest ldap plugin will create a config file (`~/.steampipe/confi
 
 ```hcl
 connection "ldap" {
-  plugin     = "ldap"
+  plugin = "ldap"
 
   # The following set of properties are mandatory for the ldap plugin to make a connection to the server
   # Distinguished name of the user which will be used to bind to the server
-  # username   = "CN=Admin,OU=Users,DC=example,DC=domain,DC=com"
+  # username = "CN=Admin,OU=Users,DC=domain,DC=example,DC=com"
 
   # The corresponding password of the user defined above
-  # password   = "55j%@8Rn[Ct8#\Mm"
+  # password = "55j%@8RnFakePassword"
 
-  # Url to which the plugin will connect to in the format -> <ip-address>:<port>
-  # url        = "10.84.11.5:389"
+  # Host to which the plugin will connect to e.g. ad.example.com, ldap.example.com etc.
+  # host = "domain.example.com"
+
+  # Port on which the directory server is listening i.e. 389, 636 etc.
+  # port = "389"
+
+  # Set to true to enable TLS encryption
+  # tls_required = false
 
   # Distinguished name of the base object on which queries will be executed
-  # base_dn    = "DC=example,DC=domain,DC=com"
+  # base_dn = "DC=domain,DC=example,DC=com"
 
   # Fixed set of attributes that will be requested for each LDAP query. This attribute list is shared across all tables.
   # If nothing is provided, Steampipe will request for all attributes
