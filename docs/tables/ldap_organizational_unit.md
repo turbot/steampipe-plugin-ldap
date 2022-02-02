@@ -8,11 +8,11 @@ This table supports optional quals. Queries with optional quals in `where` claus
 
 Optional quals are supported for the following columns:
 
+- `description`
 - `filter` - Allows use of explicit query. Refer [LDAP filter language](https://ldap.com/ldap-filters/)
 - `ou`
-- `description`
-- `created_on`
-- `modified_on`
+- `when_changed`
+- `when_created`
 
 **Note:** This table supports an optional `filter` column to query results based on the LDAP [filter](https://ldap.com/ldap-filters/) language.
 
@@ -24,7 +24,7 @@ Optional quals are supported for the following columns:
 select
   dn,
   ou,
-  created_on
+  when_created
 from
   ldap_organizational_unit;
 ```
@@ -34,7 +34,7 @@ from
 ```sql
 select
   ou,
-  created_on,
+  when_created,
   managed_by
 from
   ldap_organizational_unit;
@@ -46,11 +46,11 @@ from
 select
   dn,
   ou,
-  created_on
+  when_created
 from
   ldap_organizational_unit
 where
-  created_on > current_timestamp - interval '30 days';
+  when_created > current_timestamp - interval '30 days';
 ```
 
 ### List all organizational units that are critical system objects and cannot be deleted without replacement
@@ -59,7 +59,7 @@ where
 select
   dn,
   ou,
-  created_on,
+  when_created,
   managed_by
 from
   ldap_organizational_unit

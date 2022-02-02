@@ -46,11 +46,11 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 		List: &plugin.ListConfig{
 			Hydrate: listOrganizationalUnits,
 			KeyColumns: []*plugin.KeyColumn{
+				{Name: "description", Require: plugin.Optional},
 				{Name: "filter", Require: plugin.Optional},
 				{Name: "ou", Require: plugin.Optional},
-				{Name: "description", Require: plugin.Optional},
-				{Name: "when_created", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
 				{Name: "when_changed", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
+				{Name: "when_created", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
 			},
 		},
 		Columns: []*plugin.Column{
@@ -62,22 +62,22 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 			},
 			{
 				Name:        "ou",
-				Description: "Name of the organizational unit",
+				Description: "Name of the organizational unit.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "managed_by",
-				Description: "The Person/Group that manages the organizational unit.",
+				Description: "The distinguished name of the user that is assigned to manage this organizational unit.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "when_created",
-				Description: "Date & Time the organizational unit was created.",
+				Description: "Date when the organizational unit was created.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "when_changed",
-				Description: "Date & Time the organizational unit was last modified.",
+				Description: "Date when the organizational unit was last changed.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 
@@ -94,14 +94,14 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 			},
 			{
 				Name:        "filter",
-				Description: "Optional custom filter passed.",
+				Description: "Optional search filter.",
 				Type:        proto.ColumnType_STRING,
 			},
 
 			// JSON Columns
 			{
 				Name:        "object_class",
-				Description: "Object Classes of the organizational unit.",
+				Description: "Object classes of the organizational unit.",
 				Type:        proto.ColumnType_JSON,
 			},
 			{
@@ -155,7 +155,7 @@ func getOrganizationalUnit(ctx context.Context, d *plugin.QueryData, h *plugin.H
 			Attributes:  transformAttributes(ctx, entry.Attributes),
 		}
 
-		// Populate Time fields
+		// Populate time fields
 		if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))) {
 			row.WhenCreated = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
 		}

@@ -8,13 +8,13 @@ This table supports optional quals. Queries with optional quals in `where` claus
 
 Optional quals are supported for the following columns:
 
-- `filter` - Allows use of explicit query. Refer [LDAP filter language](https://ldap.com/ldap-filters/)
 - `cn`
+- `description`
+- `filter` - Allows use of explicit query. Refer [LDAP filter language](https://ldap.com/ldap-filters/)
 - `object_sid`
 - `sam_account_name`
-- `description`
-- `created_on`
-- `modified_on`
+- `when_changed`
+- `when_created`
 
 ## Examples
 
@@ -25,7 +25,7 @@ select
   dn,
   cn,
   ou,
-  created_on,
+  when_created,
   sam_account_name
 from
   ldap_group;
@@ -48,11 +48,11 @@ from
 select
   dn,
   sam_account_name,
-  created_on
+  when_created
 from
   ldap_group
 where
-  created_on > current_timestamp - interval '30 days';
+  when_created > current_timestamp - interval '30 days';
 ```
 
 ### Get details of group 'Database' and the groups which it is a member of
@@ -95,7 +95,7 @@ select
   dn,
   ou,
   description,
-  created_on
+  when_created
 from
   ldap_group
 where

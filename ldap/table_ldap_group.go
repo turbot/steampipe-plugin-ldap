@@ -52,13 +52,13 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 		List: &plugin.ListConfig{
 			Hydrate: listGroups,
 			KeyColumns: []*plugin.KeyColumn{
-				{Name: "filter", Require: plugin.Optional},
 				{Name: "cn", Require: plugin.Optional},
+				{Name: "description", Require: plugin.Optional},
+				{Name: "filter", Require: plugin.Optional},
 				{Name: "object_sid", Require: plugin.Optional},
 				{Name: "sam_account_name", Require: plugin.Optional},
-				{Name: "description", Require: plugin.Optional},
-				{Name: "when_created", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
 				{Name: "when_changed", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
+				{Name: "when_created", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
 			},
 		},
 		Columns: []*plugin.Column{
@@ -90,12 +90,12 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 			},
 			{
 				Name:        "when_created",
-				Description: "Date & time the group was created.",
+				Description: "Date when the group was created.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "when_changed",
-				Description: "Date & time the group was last modified.",
+				Description: "Date when the group was last changed.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 
@@ -107,12 +107,12 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 			},
 			{
 				Name:        "base_dn",
-				Description: "The Base distinguished name on which the search was performed.",
+				Description: "The Base DN on which the search was performed.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "filter",
-				Description: "Optional custom filter passed.",
+				Description: "Optional search filter.",
 				Type:        proto.ColumnType_STRING,
 			},
 
@@ -272,7 +272,7 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 				row.Filter = keyQuals["filter"].GetStringValue()
 			}
 
-			// Populate Time fields
+			// Populate time fields
 			if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))) {
 				row.WhenCreated = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
 			}

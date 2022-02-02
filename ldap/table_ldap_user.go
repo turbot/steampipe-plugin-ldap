@@ -71,20 +71,20 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 		List: &plugin.ListConfig{
 			Hydrate: listUsers,
 			KeyColumns: []*plugin.KeyColumn{
-				{Name: "filter", Require: plugin.Optional},
 				{Name: "cn", Require: plugin.Optional},
-				{Name: "surname", Require: plugin.Optional},
-				{Name: "mail", Require: plugin.Optional},
-				{Name: "display_name", Require: plugin.Optional},
-				{Name: "given_name", Require: plugin.Optional},
 				{Name: "department", Require: plugin.Optional},
+				{Name: "description", Require: plugin.Optional},
+				{Name: "disabled", Operators: []string{"<>", "="}, Require: plugin.Optional},
+				{Name: "display_name", Require: plugin.Optional},
+				{Name: "filter", Require: plugin.Optional},
+				{Name: "given_name", Require: plugin.Optional},
+				{Name: "mail", Require: plugin.Optional},
 				{Name: "object_sid", Require: plugin.Optional},
 				{Name: "sam_account_name", Require: plugin.Optional},
+				{Name: "surname", Require: plugin.Optional},
 				{Name: "user_principal_name", Require: plugin.Optional},
-				{Name: "description", Require: plugin.Optional},
-				{Name: "when_created", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
 				{Name: "when_changed", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
-				{Name: "disabled", Operators: []string{"<>", "="}, Require: plugin.Optional},
+				{Name: "when_created", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
 			},
 		},
 		Columns: []*plugin.Column{
@@ -136,12 +136,12 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 			},
 			{
 				Name:        "when_created",
-				Description: "Date & time the user was created.",
+				Description: "Date when the user was created.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
 				Name:        "when_changed",
-				Description: "Date & time the user was last modified.",
+				Description: "Date when the user was last changed.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
@@ -151,7 +151,7 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 			},
 			{
 				Name:        "user_principal_name",
-				Description: "Logon name of the user.",
+				Description: "Login name of the user, usually mapped to the user email name.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
@@ -178,12 +178,12 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 			},
 			{
 				Name:        "base_dn",
-				Description: "The Base distinguished name on which the search was performed.",
+				Description: "The Base DN on which the search was performed.",
 				Type:        proto.ColumnType_STRING,
 			},
 			{
 				Name:        "filter",
-				Description: "Optional custom filter passed.",
+				Description: "Optional search filter.",
 				Type:        proto.ColumnType_STRING,
 			},
 
