@@ -2,26 +2,25 @@
 
 A user is known as the customer or end-user.
 
-**Important notes:**
+**Notes:**
 
-This table supports optional quals. Queries with optional quals in `where` clause are optimised to use ldap filters.
-
-Optional quals are supported for the following columns:
-
-- `cn`
-- `department`
-- `description`
-- `disabled`
-- `display_name`
-- `filter` - Allows use of explicit query. Refer [LDAP filter language](https://ldap.com/ldap-filters/)
-- `given_name`
-- `mail`
-- `object_sid`
-- `sam_account_name`
-- `surname`
-- `user_principal_name`
-- `when_created`
-- `when_changed`
+- This table supports optional quals. Queries with optional quals in a `where` clause are optimised to use LDAP search filters.
+- If `filter` is provided, other optional quals will not be used when searching.
+- Optional quals are supported for the following columns:
+  - `cn`
+  - `department`
+  - `description`
+  - `disabled`
+  - `display_name`
+  - `filter` - Allows use of an explicit filter. Please refer to [LDAP filter language](https://ldap.com/ldap-filters/).
+  - `given_name`
+  - `mail`
+  - `object_sid`
+  - `sam_account_name`
+  - `surname`
+  - `user_principal_name`
+  - `when_created`
+  - `when_changed`
 
 ## Examples
 
@@ -31,25 +30,12 @@ Optional quals are supported for the following columns:
 select
   dn,
   cn,
-  initials,
   when_created,
   mail,
   department,
-  sam_account_name
+  sam_account_name,
 from
   ldap_user limit 100;
-```
-
-### Get logon name, e-mail, and groups that each user is a member of
-
-```sql
-select
-  user_principal_name,
-  display_name,
-  mail,
-  jsonb_pretty(member_of) as user_groups
-from
-  ldap_user;
 ```
 
 ### List disabled users
@@ -66,7 +52,7 @@ where
   disabled;
 ```
 
-### List users belonging to the 'Engineering' Department
+### List users in the 'Engineering' department
 
 ```sql
 select
@@ -80,7 +66,7 @@ where
   department = 'Engineering';
 ```
 
-### List users that have been created in the last '30' days
+### List users that have been created in the last 30 days
 
 ```sql
 select
@@ -94,16 +80,16 @@ where
   when_created > current_timestamp - interval '30 days';
 ```
 
-### Get details of user 'Adelhard Frey' and the groups which he is a member of
+### Get details for groups the user 'Bob Smith' is a member of
 
 ```sql
 select
   u.dn as userDn,
   u.mail as email,
-  u.object_sid as userObjectSid,
-  g.dn as groupDn,
-  g.cn as groupName,
-  g.object_sid as groupObjectSid
+  u.object_sid as user_object_sid,
+  g.dn as group_dn,
+  g.cn as group_name,
+  g.object_sid as group_object_sid
 from
   ldap.ldap_user as u
 cross join
@@ -113,10 +99,12 @@ inner join
 on
   g.dn = groups
 where
-  u.cn = 'Adelhard Frey';
+  u.cn = 'Bob Smith';
 ```
 
-### List users whose name start with John using a filter
+## Filter Examples
+
+### List users whose names start with "Adam"
 
 ```sql
 select
@@ -130,7 +118,7 @@ where
   filter = '(cn=Adam*)';
 ```
 
-### List members of a group by using group `dn` in `filter`
+### List members of a group filtering by the group's DN
 
 ```sql
 select
@@ -143,17 +131,5 @@ select
 from
   ldap_user
 where
-  filter = '(memberof:1.2.840.113556.1.4.1941:=CN=Fleet,OU=Mods,OU=VASHI,DC=vashi,DC=turbot,DC=com)';
-```
-
-### Get users count for each organizational unit
-
-```sql
-select
-  ou,
-  count(*)
-from
-  ldap_user
-group by
-  ou;
+  filter = '(memberof=CN=Devs,OU=Steampipe,OU=SP,DC=sp,DC=turbot,DC=com)';
 ```

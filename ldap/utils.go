@@ -24,7 +24,7 @@ var ldapDisplayNames = map[string]string{
 // Define the constant page size to be used by all ldap tables
 const PageSize uint32 = 1000
 
-// Define the time filter timestamo format
+// Define the time filter timestamp format
 const FilterTimestampFormat = "20060102150405.000Z"
 
 // Disabled User Filter
@@ -140,6 +140,7 @@ func search(ctx context.Context, d *plugin.QueryData, searchReq *ldap.SearchRequ
 func generateFilterString(keyQuals map[string]*proto.QualValue, quals map[string]*plugin.KeyColumnQuals, objectFilter string) string {
 	var andClauses strings.Builder
 
+	// If filter is provided, ignore other optional quals
 	if keyQuals["filter"] != nil {
 		val := keyQuals["filter"].GetStringValue()
 		if !strings.HasPrefix(val, "(") {

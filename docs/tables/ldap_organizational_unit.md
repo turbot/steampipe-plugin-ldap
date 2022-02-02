@@ -1,20 +1,17 @@
 # Table: ldap_organizational_unit
 
-An organizational unit contains users, computers, groups etc.
+An organizational unit contains users, computers, groups, and other objects.
 
-**Important notes:**
+**Note:**
 
-This table supports optional quals. Queries with optional quals in `where` clause are optimised to use ldap filters.
-
-Optional quals are supported for the following columns:
-
-- `description`
-- `filter` - Allows use of explicit query. Refer [LDAP filter language](https://ldap.com/ldap-filters/)
-- `ou`
-- `when_changed`
-- `when_created`
-
-**Note:** This table supports an optional `filter` column to query results based on the LDAP [filter](https://ldap.com/ldap-filters/) language.
+- This table supports optional quals. Queries with optional quals in a `where` clause are optimised to use LDAP search filters.
+- If `filter` is provided, other optional quals will not be used when searching.
+- Optional quals are supported for the following columns:
+  - `description`
+  - `filter` - Allows use of an explicit filter. Please refer to [LDAP filter language](https://ldap.com/ldap-filters/).
+  - `ou`
+  - `when_changed`
+  - `when_created`
 
 ## Examples
 
@@ -24,23 +21,13 @@ Optional quals are supported for the following columns:
 select
   dn,
   ou,
-  when_created
-from
-  ldap_organizational_unit;
-```
-
-### Get name and the person/group managing the organizational unit
-
-```sql
-select
-  ou,
   when_created,
   managed_by
 from
   ldap_organizational_unit;
 ```
 
-### List organizational units that have been created in the last '30' days
+### List organizational units that have been created in the last 30 days
 
 ```sql
 select
@@ -53,16 +40,18 @@ where
   when_created > current_timestamp - interval '30 days';
 ```
 
-### List all organizational units that are critical system objects and cannot be deleted without replacement
+## Filter Examples
+
+### List organizational units that are critical system objects
 
 ```sql
 select
   dn,
   ou,
-  when_created,
-  managed_by
+  managed_by,
+  attributes -> 'isCriticalSystemObject' as is_critical_system_object
 from
   ldap_organizational_unit
 where
-  attributes->'isCriticalSystemObject' ? 'TRUE';
+  filter = '(isCriticalSystemObject=TRUE)';
 ```

@@ -1,20 +1,19 @@
 # Table: ldap_group
 
-A group is a collection of digital identities i.e. users, groups etc.
+A group is a collection of digital identities, e.g., users, groups.
 
-**Important notes:**
+**Note:**
 
-This table supports optional quals. Queries with optional quals in `where` clause are optimised to use ldap filters.
-
-Optional quals are supported for the following columns:
-
-- `cn`
-- `description`
-- `filter` - Allows use of explicit query. Refer [LDAP filter language](https://ldap.com/ldap-filters/)
-- `object_sid`
-- `sam_account_name`
-- `when_changed`
-- `when_created`
+- This table supports optional quals. Queries with optional quals in a `where` clause are optimised to use LDAP search filters.
+- If `filter` is provided, other optional quals will not be used when searching.
+- Optional quals are supported for the following columns:
+  - `cn`
+  - `description`
+  - `filter` - Allows use of an explicit filter. Please refer to [LDAP filter language](https://ldap.com/ldap-filters/).
+  - `object_sid`
+  - `sam_account_name`
+  - `when_changed`
+  - `when_created`
 
 ## Examples
 
@@ -31,18 +30,15 @@ from
   ldap_group;
 ```
 
-### Get logon name, organizational unit, and groups that the group is a member of
+### List all members for each group
 
 ```sql
 select
-  sam_account_name,
-  ou,
-  jsonb_pretty(member_of) as group_groups
+  jsonb_pretty(attributes -> 'member') as members
 from
   ldap_group;
 ```
-
-### List groups that have been created in the last '30' days
+### List groups that have been created in the last 30 days
 
 ```sql
 select
@@ -55,16 +51,16 @@ where
   when_created > current_timestamp - interval '30 days';
 ```
 
-### Get details of group 'Database' and the groups which it is a member of
+### Get details for groups the group 'Database' is a member of
 
 ```sql
 select
-  g.dn as groupDn,
-  g.ou as groupOu,
-  g.object_sid as groupObjectSid,
-  mg.dn as memberOfGroupDn,
-  mg.cn as memberOfGroupName,
-  mg.object_sid as memberOfGroupObjectSid
+  g.dn as group_nd,
+  g.ou as group_ou,
+  g.object_sid as group_object_sid,
+  mg.dn as parent_group_dn,
+  mg.cn as parent_group_name,
+  mg.object_sid as parent_group_object_sid
 from
   ldap.ldap_group as g
 cross join
@@ -77,18 +73,9 @@ where
   g.cn = 'Database';
 ```
 
-### Get all members of a particular group
+## Filter Examples
 
-```sql
-select
-  jsonb_pretty(attributes->'member') as members
-from
-  ldap_group
-where
-  cn = 'Database';
-```
-
-### List groups a user is member of using user `dn` in `filter`
+### List groups that "Bob Smith" is a member of
 
 ```sql
 select
@@ -99,5 +86,5 @@ select
 from
   ldap_group
 where
-  filter = '(member:1.2.840.113556.1.4.1941:=CN=Ljiljana Rausch,OU=Mods,OU=VASHI,DC=vashi,DC=turbot,DC=com)';
+  filter = '(member=CN=Bob Smith,OU=Devs,OU=SP,DC=sp,DC=turbot,DC=com)';
 ```
