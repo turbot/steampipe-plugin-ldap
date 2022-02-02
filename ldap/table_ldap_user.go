@@ -16,7 +16,7 @@ type userRow struct {
 	Dn string
 	// Base Domain Name
 	BaseDn string
-	// Filter string (if passed as query clause)
+	// Filter string
 	Filter string
 	// Common Name / Full Name
 	Cn string
@@ -86,8 +86,6 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				{Name: "created_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
 				{Name: "modified_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
 				{Name: "disabled", Operators: []string{"<>", "="}, Require: plugin.Optional},
-				// {Name: "ou", Require: plugin.Optional}, // TODO: Not Working
-				// {Name: "job_title", Require: plugin.Optional}, // TODO: Not Working
 			},
 		},
 		Columns: []*plugin.Column{
@@ -201,12 +199,11 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Description: "Object classes of the user.",
 				Type:        proto.ColumnType_JSON,
 			},
-			// https://github.com/turbot/steampipe-postgres-fdw/issues/118
-			// {
-			// 	Name:        "attributes",
-			// 	Description: "All attributes that have been returned from LDAP.",
-			// 	Type:        proto.ColumnType_JSON,
-			// },
+			{
+				Name:        "attributes",
+				Description: "All attributes that have been returned from LDAP.",
+				Type:        proto.ColumnType_JSON,
+			},
 
 			// Steampipe Columns
 			{
@@ -221,7 +218,7 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 
 func getUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Trace("getUser")
+	logger.Trace("ldap_user.getUser")
 
 	userDN := d.KeyColumnQuals["dn"].GetStringValue()
 
@@ -261,7 +258,7 @@ func getUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (i
 			SamAccountName:    entry.GetAttributeValue("sAMAccountName"),
 			UserPrincipalName: entry.GetAttributeValue("userPrincipalName"),
 			MemberOf:          entry.GetAttributeValues("memberOf"),
-			Attributes:        transformAttributes(logger, entry.Attributes),
+			Attributes:        transformAttributes(ctx, entry.Attributes),
 			Disabled:          verifyUserDisabled(ctx, entry),
 		}
 
@@ -281,7 +278,7 @@ func getUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (i
 
 func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Trace("listUsers")
+	logger.Trace("ldap_user.listUsers")
 
 	var baseDN, userObjectFilter string
 	var attributes []string
@@ -309,15 +306,15 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 
 	filter := generateFilterString(keyQuals, quals, userObjectFilter)
 
+	logger.Debug("ldap_user.listUsers", "baseDN", baseDN)
+	logger.Debug("ldap_user.listUsers", "filter", filter)
+	logger.Debug("ldap_user.listUsers", "attributes", attributes)
+
 	if d.QueryContext.Limit != nil {
 		if uint32(*d.QueryContext.Limit) < pageSize {
 			pageSize = uint32(*d.QueryContext.Limit)
 		}
 	}
-
-	logger.Info("baseDN", baseDN)
-	logger.Info("filter", filter)
-	logger.Info("attributes", attributes)
 
 	var searchReq *ldap.SearchRequest
 	paging := ldap.NewControlPaging(pageSize)
@@ -355,7 +352,7 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 				SamAccountName:    entry.GetAttributeValue("sAMAccountName"),
 				UserPrincipalName: entry.GetAttributeValue("userPrincipalName"),
 				MemberOf:          entry.GetAttributeValues("memberOf"),
-				Attributes:        transformAttributes(logger, entry.Attributes),
+				Attributes:        transformAttributes(ctx, entry.Attributes),
 				Disabled:          verifyUserDisabled(ctx, entry),
 			}
 
@@ -380,7 +377,7 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 		}
 
 		// If the result control does not have paging or if the paging control does not
-		// have a next page cookie we exit from the loop
+		// have a next page cookie exit from the loop
 		resultCtrl := ldap.FindControl(result.Controls, paging.GetControlType())
 		if resultCtrl == nil {
 			break

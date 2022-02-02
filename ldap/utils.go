@@ -10,11 +10,16 @@ import (
 
 	"github.com/bwmarrin/go-objectsid"
 	"github.com/go-ldap/ldap/v3"
-	"github.com/hashicorp/go-hclog"
 	"github.com/iancoleman/strcase"
 	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
 	"github.com/turbot/steampipe-plugin-sdk/plugin"
 )
+
+// Map containing column name to ldap display name mapping for properties having differrent column name and ldap display name.
+// https://docs.microsoft.com/en-us/windows/win32/adschema/attributes-all
+var ldapDisplayNames = map[string]string{
+	"surname": "sn",
+}
 
 // Define the constant page size to be used by all ldap tables
 const PageSize uint32 = 1000
@@ -118,7 +123,7 @@ func search(ctx context.Context, d *plugin.QueryData, searchReq *ldap.SearchRequ
 	}
 	searchResult, e := conn.Search(searchReq)
 	if e != nil && ldap.IsErrorWithCode(e, 200) {
-		plugin.Logger(ctx).Info("LDAP Connection closed, trying to reconnect ...")
+		plugin.Logger(ctx).Info("LDAP Connection closed, trying to reconnect...")
 		conn, err := reconnect(ctx, d)
 		if err != nil {
 			return nil, err
@@ -253,16 +258,10 @@ func convertToTimestamp(ctx context.Context, str string) *time.Time {
 	return &t
 }
 
-func transformAttributes(logger hclog.Logger, attributes []*ldap.EntryAttribute) map[string][]string {
+func transformAttributes(ctx context.Context, attributes []*ldap.EntryAttribute) map[string][]string {
 	var data = make(map[string][]string)
 	for _, attribute := range attributes {
 		data[attribute.Name] = attribute.Values
 	}
 	return data
-}
-
-// Map containing column name to ldap display name mapping for properties having differrent column name and ldap display name.
-// https://docs.microsoft.com/en-us/windows/win32/adschema/attributes-all
-var ldapDisplayNames = map[string]string{
-	"surname": "sn",
 }

@@ -15,7 +15,7 @@ type groupRow struct {
 	Dn string
 	// Base Domain Name
 	BaseDn string
-	// Filter string (if passed as query clause)
+	// Filter string
 	Filter string
 	// Common Name
 	Cn string
@@ -60,7 +60,6 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 				{Name: "description", Require: plugin.Optional},
 				{Name: "created_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
 				{Name: "modified_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
-				// {Name: "ou", Require: plugin.Optional}, // TODO: Not Working
 			},
 		},
 		Columns: []*plugin.Column{
@@ -148,7 +147,7 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 
 func getGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Trace("getGroup")
+	logger.Trace("ldap_group.getGroup")
 
 	groupDN := d.KeyColumnQuals["dn"].GetStringValue()
 
@@ -181,7 +180,7 @@ func getGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (
 			ObjectSid:      getObjectSid(entry),
 			SamAccountName: entry.GetAttributeValue("sAMAccountName"),
 			MemberOf:       entry.GetAttributeValues("memberOf"),
-			Attributes:     transformAttributes(logger, entry.Attributes),
+			Attributes:     transformAttributes(ctx, entry.Attributes),
 		}
 
 		// Populate Time fields
@@ -200,7 +199,7 @@ func getGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (
 
 func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Trace("listGroups")
+	logger.Trace("ldap_group.listGroups")
 
 	var baseDN, groupObjectFilter string
 	var attributes []string
@@ -228,15 +227,15 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 
 	filter := generateFilterString(keyQuals, quals, groupObjectFilter)
 
+	logger.Debug("ldap_group.listGroups", "baseDN", baseDN)
+	logger.Debug("ldap_group.listGroups", "filter", filter)
+	logger.Debug("ldap_group.listGroups", "attributes", attributes)
+
 	if d.QueryContext.Limit != nil {
 		if uint32(*d.QueryContext.Limit) < pageSize {
 			pageSize = uint32(*d.QueryContext.Limit)
 		}
 	}
-
-	logger.Info("baseDN", baseDN)
-	logger.Info("filter", filter)
-	logger.Info("attributes", attributes)
 
 	var searchReq *ldap.SearchRequest
 	paging := ldap.NewControlPaging(pageSize)
@@ -267,7 +266,7 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 				ObjectSid:      getObjectSid(entry),
 				SamAccountName: entry.GetAttributeValue("sAMAccountName"),
 				MemberOf:       entry.GetAttributeValues("memberOf"),
-				Attributes:     transformAttributes(logger, entry.Attributes),
+				Attributes:     transformAttributes(ctx, entry.Attributes),
 			}
 
 			if keyQuals["filter"] != nil {
@@ -291,7 +290,7 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 		}
 
 		// If the result control does not have paging or if the paging control does not
-		// have a next page cookie we exit from the loop
+		// have a next page cookie exit from the loop
 		resultCtrl := ldap.FindControl(result.Controls, paging.GetControlType())
 		if resultCtrl == nil {
 			break

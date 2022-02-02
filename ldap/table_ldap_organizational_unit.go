@@ -15,7 +15,7 @@ type organizationalUnitRow struct {
 	Dn string
 	// Base Domain Name
 	BaseDn string
-	// Filter string (if passed as query clause)
+	// Filter string
 	Filter string
 	// Name of the Organizational Unit
 	Ou string
@@ -124,7 +124,7 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 
 func getOrganizationalUnit(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Trace("getOrganizationalUnit")
+	logger.Trace("ldap_organizational_unit.getOrganizationalUnit")
 
 	organizationalUnitDN := d.KeyColumnQuals["dn"].GetStringValue()
 
@@ -153,7 +153,7 @@ func getOrganizationalUnit(ctx context.Context, d *plugin.QueryData, h *plugin.H
 			Description: entry.GetAttributeValue("description"),
 			ObjectClass: entry.GetAttributeValues("objectClass"),
 			ManagedBy:   entry.GetAttributeValue("managedBy"),
-			Attributes:  transformAttributes(logger, entry.Attributes),
+			Attributes:  transformAttributes(ctx, entry.Attributes),
 		}
 
 		// Populate Time fields
@@ -172,7 +172,7 @@ func getOrganizationalUnit(ctx context.Context, d *plugin.QueryData, h *plugin.H
 
 func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
-	logger.Trace("listOrganizationalUnits")
+	logger.Trace("ldap_organizational_unit.listOrganizationalUnits")
 
 	var baseDN, organizationalUnitObjectFilter string
 	var attributes []string
@@ -199,15 +199,15 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 
 	filter := generateFilterString(keyQuals, quals, organizationalUnitObjectFilter)
 
+	logger.Debug("ldap_organizational_unit.listOrganizationalUnits", "baseDN", baseDN)
+	logger.Debug("ldap_organizational_unit.listOrganizationalUnits", "filter", filter)
+	logger.Debug("ldap_organizational_unit.listOrganizationalUnits", "attributes", attributes)
+
 	if d.QueryContext.Limit != nil {
 		if uint32(*d.QueryContext.Limit) < pageSize {
 			pageSize = uint32(*d.QueryContext.Limit)
 		}
 	}
-
-	logger.Info("baseDN", baseDN)
-	logger.Info("filter", filter)
-	logger.Info("attributes", attributes)
 
 	var searchReq *ldap.SearchRequest
 	paging := ldap.NewControlPaging(pageSize)
@@ -234,7 +234,7 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 				Description: entry.GetAttributeValue("description"),
 				ObjectClass: entry.GetAttributeValues("objectClass"),
 				ManagedBy:   entry.GetAttributeValue("managedBy"),
-				Attributes:  transformAttributes(logger, entry.Attributes),
+				Attributes:  transformAttributes(ctx, entry.Attributes),
 			}
 
 			if keyQuals["filter"] != nil {
@@ -258,7 +258,7 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 		}
 
 		// If the result control does not have paging or if the paging control does not
-		// have a next page cookie we exit from the loop
+		// have a next page cookie exit from the loop
 		resultCtrl := ldap.FindControl(result.Controls, paging.GetControlType())
 		if resultCtrl == nil {
 			break
