@@ -152,6 +152,7 @@ func generateFilterString(keyQuals map[string]*proto.QualValue, quals map[string
 	} else {
 		// Range over the key quals
 		for key, value := range keyQuals {
+			// Skip filter since it's handled separately
 			if key == "filter" {
 				continue
 			}
@@ -168,18 +169,34 @@ func generateFilterString(keyQuals map[string]*proto.QualValue, quals map[string
 		}
 
 		// Get individual quals
-		if quals["created_on"] != nil {
-			for _, q := range quals["created_on"].Quals {
+		if quals["when_created"] != nil {
+			for _, q := range quals["when_created"].Quals {
+				var clause string
 				timeString := q.Value.GetTimestampValue().AsTime().Format(FilterTimestampFormat)
-				clause := buildClause("whenCreated", timeString, q.Operator)
+				switch q.Operator {
+				case "=", ">=", "<=":
+					clause = buildClause("whenCreated", timeString, q.Operator)
+				case ">":
+					clause = buildClause("whenCreated", timeString, ">")
+				case "<":
+					clause = buildClause("whenCreated", timeString, "<")
+				}
 				andClauses.WriteString(clause)
 			}
 		}
 
-		if quals["modified_on"] != nil {
-			for _, q := range quals["modified_on"].Quals {
+		if quals["when_changed"] != nil {
+			for _, q := range quals["when_changed"].Quals {
+				var clause string
 				timeString := q.Value.GetTimestampValue().AsTime().Format(FilterTimestampFormat)
-				clause := buildClause("whenChanged", timeString, q.Operator)
+				switch q.Operator {
+				case "=", ">=", "<=":
+					clause = buildClause("whenChanged", timeString, q.Operator)
+				case ">":
+					clause = buildClause("whenChanged", timeString, ">")
+				case "<":
+					clause = buildClause("whenChanged", timeString, "<")
+				}
 				andClauses.WriteString(clause)
 			}
 		}

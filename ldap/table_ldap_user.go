@@ -12,47 +12,47 @@ import (
 )
 
 type userRow struct {
-	// Distinguished Name
+	// Distinguished name
 	Dn string
-	// Base Domain Name
+	// Base domain name
 	BaseDn string
 	// Filter string
 	Filter string
-	// Common Name / Full Name
+	// Common name / Full name
 	Cn string
 	// Description
 	Description string
-	// Display Name / Full Name
+	// Display name / Full name
 	DisplayName string
 	// First name
 	GivenName string
-	// Middle Initials
+	// Middle initials
 	Initials string
-	// Email id
+	// Email address
 	Mail string
-	// Create Date
-	CreatedOn *time.Time
-	// Modified Date
-	ModifiedOn *time.Time
-	// Object Class
+	// Creation date
+	WhenCreated *time.Time
+	// Last modified date
+	WhenChanged *time.Time
+	// Object class
 	ObjectClass []string
-	// Organizational Unit to which the user belongs
+	// Organizational unit the user belongs to
 	Ou string
-	// Last Name
+	// Last name
 	Surname string
 	// Department
 	Department string
 	// Object SID
 	ObjectSid string
-	// SAM Account Name
+	// SAM account name
 	SamAccountName string
-	// User Principal Name
+	// User principal name
 	UserPrincipalName string
 	// Title
 	Title string
-	// Job Title
+	// Job title
 	JobTitle string
-	// Groups to which the user belongs
+	// Groups the user belongs to
 	MemberOf []string
 	// Whether the user account is disabled
 	Disabled *bool
@@ -82,8 +82,8 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				{Name: "sam_account_name", Require: plugin.Optional},
 				{Name: "user_principal_name", Require: plugin.Optional},
 				{Name: "description", Require: plugin.Optional},
-				{Name: "created_on", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
-				{Name: "modified_on", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
+				{Name: "when_created", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
+				{Name: "when_changed", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
 				{Name: "disabled", Operators: []string{"<>", "="}, Require: plugin.Optional},
 			},
 		},
@@ -135,12 +135,12 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Type:        proto.ColumnType_STRING,
 			},
 			{
-				Name:        "created_on",
+				Name:        "when_created",
 				Description: "Date & time the user was created.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
-				Name:        "modified_on",
+				Name:        "when_changed",
 				Description: "Date & time the user was last modified.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
@@ -263,10 +263,10 @@ func getUser(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (i
 
 		// Populate Time fields
 		if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))) {
-			row.CreatedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
+			row.WhenCreated = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
 		}
 		if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))) {
-			row.ModifiedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
+			row.WhenChanged = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
 		}
 
 		return row, nil
@@ -361,10 +361,10 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 
 			// Populate Time fields
 			if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))) {
-				row.CreatedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
+				row.WhenCreated = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
 			}
 			if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))) {
-				row.ModifiedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
+				row.WhenChanged = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
 			}
 
 			d.StreamListItem(ctx, row)

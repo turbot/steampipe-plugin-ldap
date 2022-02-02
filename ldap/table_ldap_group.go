@@ -11,31 +11,31 @@ import (
 )
 
 type groupRow struct {
-	// Distinguished Name
+	// Distinguished name
 	Dn string
-	// Base Domain Name
+	// Base domain name
 	BaseDn string
 	// Filter string
 	Filter string
-	// Common Name
+	// Common name
 	Cn string
 	// Description
 	Description string
-	// Create Date
-	CreatedOn *time.Time
-	// Modified Date
-	ModifiedOn *time.Time
-	// Object Class
+	// Creation date
+	WhenCreated *time.Time
+	// Last modified date
+	WhenChanged *time.Time
+	// Object class
 	ObjectClass []string
-	// Organizational Unit to which the group belongs
+	// Organizational unit the group belongs to
 	Ou string
 	// Object SID
 	ObjectSid string
-	// SAM Account Name
+	// SAM account name
 	SamAccountName string
 	// Title
 	Title string
-	// Groups to which the group belongs
+	// Groups the group belongs to
 	MemberOf []string
 	// All attributes that are configured to be returned
 	Attributes map[string][]string
@@ -57,8 +57,8 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 				{Name: "object_sid", Require: plugin.Optional},
 				{Name: "sam_account_name", Require: plugin.Optional},
 				{Name: "description", Require: plugin.Optional},
-				{Name: "created_on", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
-				{Name: "modified_on", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
+				{Name: "when_created", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
+				{Name: "when_changed", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
 			},
 		},
 		Columns: []*plugin.Column{
@@ -89,12 +89,12 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 				Type:        proto.ColumnType_STRING,
 			},
 			{
-				Name:        "created_on",
+				Name:        "when_created",
 				Description: "Date & time the group was created.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
-				Name:        "modified_on",
+				Name:        "when_changed",
 				Description: "Date & time the group was last modified.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
@@ -184,10 +184,10 @@ func getGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (
 
 		// Populate Time fields
 		if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))) {
-			row.CreatedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
+			row.WhenCreated = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
 		}
 		if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))) {
-			row.ModifiedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
+			row.WhenChanged = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
 		}
 
 		return row, nil
@@ -274,10 +274,10 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 
 			// Populate Time fields
 			if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))) {
-				row.CreatedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
+				row.WhenCreated = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
 			}
 			if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))) {
-				row.ModifiedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
+				row.WhenChanged = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
 			}
 
 			d.StreamListItem(ctx, row)

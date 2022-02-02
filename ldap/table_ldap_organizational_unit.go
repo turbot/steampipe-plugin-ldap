@@ -11,25 +11,25 @@ import (
 )
 
 type organizationalUnitRow struct {
-	// Distinguished Name
+	// Distinguished name
 	Dn string
-	// Base Domain Name
+	// Base domain name
 	BaseDn string
 	// Filter string
 	Filter string
-	// Name of the Organizational Unit
+	// Organizational unit name
 	Ou string
 	// Description
 	Description string
-	// Create Date
-	CreatedOn *time.Time
-	// Modified Date
-	ModifiedOn *time.Time
-	// Object Class
+	// Creation Date
+	WhenCreated *time.Time
+	// Last modified Date
+	WhenChanged *time.Time
+	// Object class
 	ObjectClass []string
 	// Title
 	Title string
-	// Entity that manages the Organizational Unit
+	// Entity that manages the organizational unit
 	ManagedBy string
 	// All attributes that are configured to be returned
 	Attributes map[string][]string
@@ -49,8 +49,8 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 				{Name: "filter", Require: plugin.Optional},
 				{Name: "ou", Require: plugin.Optional},
 				{Name: "description", Require: plugin.Optional},
-				{Name: "created_on", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
-				{Name: "modified_on", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
+				{Name: "when_created", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
+				{Name: "when_changed", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
 			},
 		},
 		Columns: []*plugin.Column{
@@ -71,12 +71,12 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 				Type:        proto.ColumnType_STRING,
 			},
 			{
-				Name:        "created_on",
+				Name:        "when_created",
 				Description: "Date & Time the organizational unit was created.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
 			{
-				Name:        "modified_on",
+				Name:        "when_changed",
 				Description: "Date & Time the organizational unit was last modified.",
 				Type:        proto.ColumnType_TIMESTAMP,
 			},
@@ -157,10 +157,10 @@ func getOrganizationalUnit(ctx context.Context, d *plugin.QueryData, h *plugin.H
 
 		// Populate Time fields
 		if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))) {
-			row.CreatedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
+			row.WhenCreated = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
 		}
 		if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))) {
-			row.ModifiedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
+			row.WhenChanged = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
 		}
 
 		return row, nil
@@ -242,10 +242,10 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 
 			// Populate Time fields
 			if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))) {
-				row.CreatedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
+				row.WhenCreated = convertToTimestamp(ctx, entry.GetAttributeValue("whenCreated"))
 			}
 			if !time.Time.IsZero(*convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))) {
-				row.ModifiedOn = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
+				row.WhenChanged = convertToTimestamp(ctx, entry.GetAttributeValue("whenChanged"))
 			}
 
 			d.StreamListItem(ctx, row)
