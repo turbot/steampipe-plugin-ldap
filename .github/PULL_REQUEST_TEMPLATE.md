@@ -1,5 +1,3 @@
-</details>
-
 # Example query results
 
 <details>
