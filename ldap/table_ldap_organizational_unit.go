@@ -38,7 +38,7 @@ type organizationalUnitRow struct {
 func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "ldap_organizational_unit",
-		Description: "LDAP Organizational Unit",
+		Description: "An organizational unit contains users, computers, groups, and other objects.",
 		Get: &plugin.GetConfig{
 			KeyColumns: plugin.SingleColumn("dn"),
 			Hydrate:    getOrganizationalUnit,

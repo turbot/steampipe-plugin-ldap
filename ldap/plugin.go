@@ -16,9 +16,9 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			Schema:      ConfigSchema,
 		},
 		TableMap: map[string]*plugin.Table{
-			"ldap_user":                tableLDAPUser(ctx),
 			"ldap_group":               tableLDAPGroup(ctx),
 			"ldap_organizational_unit": tableLDAPOrganizationalUnit(ctx),
+			"ldap_user":                tableLDAPUser(ctx),
 		},
 	}
 	return p

@@ -44,7 +44,7 @@ type groupRow struct {
 func tableLDAPGroup(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "ldap_group",
-		Description: "A group is a collection of digital identities i.e. users, groups etc.",
+		Description: "A group is a collection of digital identities, e.g., users, groups.",
 		Get: &plugin.GetConfig{
 			KeyColumns: plugin.SingleColumn("dn"),
 			Hydrate:    getGroup,

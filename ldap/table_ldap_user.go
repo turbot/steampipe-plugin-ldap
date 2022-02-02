@@ -63,7 +63,7 @@ type userRow struct {
 func tableLDAPUser(ctx context.Context) *plugin.Table {
 	return &plugin.Table{
 		Name:        "ldap_user",
-		Description: "LDAP User",
+		Description: "A user is known as the customer or end-user.",
 		Get: &plugin.GetConfig{
 			KeyColumns: plugin.SingleColumn("dn"),
 			Hydrate:    getUser,
