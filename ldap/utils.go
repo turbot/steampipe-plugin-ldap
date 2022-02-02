@@ -173,13 +173,14 @@ func generateFilterString(keyQuals map[string]*proto.QualValue, quals map[string
 			for _, q := range quals["when_created"].Quals {
 				var clause string
 				timeString := q.Value.GetTimestampValue().AsTime().Format(FilterTimestampFormat)
+				// LDAP filters don't support < or >, so use <= and >= instead
 				switch q.Operator {
 				case "=", ">=", "<=":
 					clause = buildClause("whenCreated", timeString, q.Operator)
 				case ">":
-					clause = buildClause("whenCreated", timeString, ">")
+					clause = buildClause("whenCreated", timeString, ">=")
 				case "<":
-					clause = buildClause("whenCreated", timeString, "<")
+					clause = buildClause("whenCreated", timeString, "<=")
 				}
 				andClauses.WriteString(clause)
 			}
@@ -189,6 +190,7 @@ func generateFilterString(keyQuals map[string]*proto.QualValue, quals map[string
 			for _, q := range quals["when_changed"].Quals {
 				var clause string
 				timeString := q.Value.GetTimestampValue().AsTime().Format(FilterTimestampFormat)
+				// LDAP filters don't support < or >, so use <= and >= instead
 				switch q.Operator {
 				case "=", ">=", "<=":
 					clause = buildClause("whenChanged", timeString, q.Operator)
