@@ -57,8 +57,8 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 				{Name: "object_sid", Require: plugin.Optional},
 				{Name: "sam_account_name", Require: plugin.Optional},
 				{Name: "description", Require: plugin.Optional},
-				{Name: "created_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
-				{Name: "modified_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
+				{Name: "created_on", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
+				{Name: "modified_on", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
 			},
 		},
 		Columns: []*plugin.Column{

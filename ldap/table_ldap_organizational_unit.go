@@ -49,8 +49,8 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 				{Name: "filter", Require: plugin.Optional},
 				{Name: "ou", Require: plugin.Optional},
 				{Name: "description", Require: plugin.Optional},
-				{Name: "created_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
-				{Name: "modified_on", Operators: []string{">=", "=", "<="}, Require: plugin.Optional},
+				{Name: "created_on", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
+				{Name: "modified_on", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
 			},
 		},
 		Columns: []*plugin.Column{
