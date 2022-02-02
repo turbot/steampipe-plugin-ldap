@@ -137,18 +137,6 @@ func search(ctx context.Context, d *plugin.QueryData, searchReq *ldap.SearchRequ
 	return searchResult, nil
 }
 
-func isNotFoundError(notFoundErrors []string) plugin.ErrorPredicate {
-	return func(err error) bool {
-		errMsg := err.Error()
-		for _, msg := range notFoundErrors {
-			if strings.Contains(errMsg, msg) {
-				return true
-			}
-		}
-		return false
-	}
-}
-
 func generateFilterString(keyQuals map[string]*proto.QualValue, quals map[string]*plugin.KeyColumnQuals, objectFilter string) string {
 	var andClauses strings.Builder
 

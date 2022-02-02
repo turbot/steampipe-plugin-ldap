@@ -40,9 +40,8 @@ func tableLDAPOrganizationalUnit(ctx context.Context) *plugin.Table {
 		Name:        "ldap_organizational_unit",
 		Description: "LDAP Organizational Unit",
 		Get: &plugin.GetConfig{
-			KeyColumns:        plugin.SingleColumn("dn"),
-			ShouldIgnoreError: isNotFoundError([]string{"InvalidVolume.NotFound", "InvalidParameterValue"}),
-			Hydrate:           getOrganizationalUnit,
+			KeyColumns: plugin.SingleColumn("dn"),
+			Hydrate:    getOrganizationalUnit,
 		},
 		List: &plugin.ListConfig{
 			Hydrate: listOrganizationalUnits,

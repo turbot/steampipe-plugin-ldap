@@ -46,9 +46,8 @@ func tableLDAPGroup(ctx context.Context) *plugin.Table {
 		Name:        "ldap_group",
 		Description: "A group is a collection of digital identities i.e. users, groups etc.",
 		Get: &plugin.GetConfig{
-			KeyColumns:        plugin.SingleColumn("dn"),
-			ShouldIgnoreError: isNotFoundError([]string{"InvalidVolume.NotFound", "InvalidParameterValue"}),
-			Hydrate:           getGroup,
+			KeyColumns: plugin.SingleColumn("dn"),
+			Hydrate:    getGroup,
 		},
 		List: &plugin.ListConfig{
 			Hydrate: listGroups,

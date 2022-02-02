@@ -65,9 +65,8 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 		Name:        "ldap_user",
 		Description: "LDAP User",
 		Get: &plugin.GetConfig{
-			KeyColumns:        plugin.SingleColumn("dn"),
-			ShouldIgnoreError: isNotFoundError([]string{"InvalidVolume.NotFound", "InvalidParameterValue"}),
-			Hydrate:           getUser,
+			KeyColumns: plugin.SingleColumn("dn"),
+			Hydrate:    getUser,
 		},
 		List: &plugin.ListConfig{
 			Hydrate: listUsers,
