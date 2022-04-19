@@ -1,6 +1,6 @@
 module github.com/turbot/steampipe-plugin-ldap
 
-go 1.17
+go 1.18
 
 require (
 	github.com/bwmarrin/go-objectsid v0.0.0-20191126144531-5fee401a2f37
