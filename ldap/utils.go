@@ -11,8 +11,8 @@ import (
 	"github.com/bwmarrin/go-objectsid"
 	"github.com/go-ldap/ldap/v3"
 	"github.com/iancoleman/strcase"
-	"github.com/turbot/steampipe-plugin-sdk/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v3/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v3/plugin"
 )
 
 // Map containing column name to ldap display name mapping for properties having differrent column name and ldap display name.
