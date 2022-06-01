@@ -1,3 +1,9 @@
+## v0.1.1 [2022-06-01]
+
+_Bug fixes_
+
+- Fixed `ldap_group` and `ldap_user` table queries crashing on `ou` column if a DN doesn't contain an OU. ([#10](https://github.com/turbot/steampipe-plugin-ldap/pull/10))
+
 ## v0.1.0 [2022-04-27]
 
 _Enhancements_
