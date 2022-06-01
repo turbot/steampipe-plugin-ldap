@@ -236,7 +236,12 @@ func buildClause(key string, value string, operator string) string {
 }
 
 func getOrganizationUnit(dn string) string {
-	return dn[strings.Index(strings.ToUpper(dn), "OU"):]
+	index := strings.Index(strings.ToUpper(dn), "OU")
+	if index > -1 {
+		return dn[index:]
+	} else {
+		return ""
+	}
 }
 
 func getObjectSid(entry *ldap.Entry) string {
