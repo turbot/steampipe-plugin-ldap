@@ -1,3 +1,10 @@
+## v0.2.0 [2022-09-26]
+
+_Dependencies_
+
+- Recompiled plugin with [steampipe-plugin-sdk v4.1.7](https://github.com/turbot/steampipe-plugin-sdk/blob/main/CHANGELOG.md#v417-2022-09-08) which includes several caching and memory management improvements. ([#13](https://github.com/turbot/steampipe-plugin-ldap/pull/13))
+- Recompiled plugin with Go version `1.19`. ([#13](https://github.com/turbot/steampipe-plugin-ldap/pull/13))
+
 ## v0.1.1 [2022-06-01]
 
 _Bug fixes_
