@@ -223,7 +223,7 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 		groupObjectFilter = "(objectClass=group)"
 	}
 
-	filter := generateFilterString(keyQuals, d, groupObjectFilter)
+	filter := generateFilterString(d, groupObjectFilter)
 
 	logger.Debug("ldap_group.listGroups", "baseDN", baseDN)
 	logger.Debug("ldap_group.listGroups", "filter", filter)

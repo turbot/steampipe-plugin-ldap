@@ -302,7 +302,7 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 		userObjectFilter = "(&(objectCategory=person)(objectClass=user))"
 	}
 
-	filter := generateFilterString(keyQuals, d, userObjectFilter)
+	filter := generateFilterString(d, userObjectFilter)
 
 	logger.Debug("ldap_user.listUsers", "baseDN", baseDN)
 	logger.Debug("ldap_user.listUsers", "filter", filter)

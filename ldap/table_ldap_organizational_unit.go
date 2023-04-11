@@ -195,7 +195,7 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 		organizationalUnitObjectFilter = "(objectClass=organizationalUnit)"
 	}
 
-	filter := generateFilterString(keyQuals, d, organizationalUnitObjectFilter)
+	filter := generateFilterString(d, organizationalUnitObjectFilter)
 
 	logger.Debug("ldap_organizational_unit.listOrganizationalUnits", "baseDN", baseDN)
 	logger.Debug("ldap_organizational_unit.listOrganizationalUnits", "filter", filter)

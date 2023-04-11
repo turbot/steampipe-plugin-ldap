@@ -137,10 +137,13 @@ func search(ctx context.Context, d *plugin.QueryData, searchReq *ldap.SearchRequ
 	return searchResult, nil
 }
 
-func generateFilterString(keyQuals map[string]*proto.QualValue, d *plugin.QueryData, objectFilter string) string {
+func generateFilterString(d *plugin.QueryData, objectFilter string) string {
 	var andClauses strings.Builder
 
 	// If filter is provided, ignore other optional quals
+
+	keyQuals := d.EqualsQuals
+
 	if keyQuals["filter"] != nil {
 		val := keyQuals["filter"].GetStringValue()
 		if !strings.HasPrefix(val, "(") {
