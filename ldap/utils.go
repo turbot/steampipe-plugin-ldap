@@ -15,7 +15,7 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 )
 
-// Map containing column name to ldap display name mapping for properties having differrent column name and ldap display name.
+// Map containing column name to ldap display name mapping for properties having different column name and ldap display name.
 // https://docs.microsoft.com/en-us/windows/win32/adschema/attributes-all
 var ldapDisplayNames = map[string]string{
 	"surname": "sn",
@@ -137,7 +137,7 @@ func search(ctx context.Context, d *plugin.QueryData, searchReq *ldap.SearchRequ
 	return searchResult, nil
 }
 
-func generateFilterString(keyQuals map[string]*proto.QualValue, quals map[string]*plugin.EqualsQuals, objectFilter string) string {
+func generateFilterString(keyQuals map[string]*proto.QualValue, d *plugin.QueryData, objectFilter string) string {
 	var andClauses strings.Builder
 
 	// If filter is provided, ignore other optional quals
@@ -168,7 +168,7 @@ func generateFilterString(keyQuals map[string]*proto.QualValue, quals map[string
 			}
 			andClauses.WriteString(clause)
 		}
-
+		quals:= d.Quals
 		// Get individual quals
 		if quals["when_created"] != nil {
 			for _, q := range quals["when_created"].Quals {

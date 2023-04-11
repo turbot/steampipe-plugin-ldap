@@ -296,14 +296,13 @@ func listUsers(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData) 
 	}
 
 	keyQuals := d.EqualsQuals
-	quals := d.Quals
 
 	// default value for the user object filter if nothing is passed
 	if userObjectFilter == "" {
 		userObjectFilter = "(&(objectCategory=person)(objectClass=user))"
 	}
 
-	filter := generateFilterString(keyQuals, quals, userObjectFilter)
+	filter := generateFilterString(keyQuals, d, userObjectFilter)
 
 	logger.Debug("ldap_user.listUsers", "baseDN", baseDN)
 	logger.Debug("ldap_user.listUsers", "filter", filter)

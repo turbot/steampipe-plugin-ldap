@@ -217,14 +217,13 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 	}
 
 	keyQuals := d.EqualsQuals
-	quals := d.Quals
 
 	// default value for the group object filter if nothing is passed
 	if groupObjectFilter == "" {
 		groupObjectFilter = "(objectClass=group)"
 	}
 
-	filter := generateFilterString(keyQuals, quals, groupObjectFilter)
+	filter := generateFilterString(keyQuals, d, groupObjectFilter)
 
 	logger.Debug("ldap_group.listGroups", "baseDN", baseDN)
 	logger.Debug("ldap_group.listGroups", "filter", filter)
