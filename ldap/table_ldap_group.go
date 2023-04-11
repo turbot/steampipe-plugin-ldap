@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/go-ldap/ldap/v3"
-	"github.com/turbot/steampipe-plugin-sdk/v4/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 )
 
 type groupRow struct {
@@ -148,7 +148,7 @@ func getGroup(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (
 	logger := plugin.Logger(ctx)
 	logger.Trace("ldap_group.getGroup")
 
-	groupDN := d.KeyColumnQuals["dn"].GetStringValue()
+	groupDN := d.EqualsQuals["dn"].GetStringValue()
 
 	ldapConfig := GetConfig(d.Connection)
 
@@ -216,15 +216,14 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 		groupObjectFilter = *ldapConfig.GroupObjectFilter
 	}
 
-	keyQuals := d.KeyColumnQuals
-	quals := d.Quals
+	keyQuals := d.EqualsQuals
 
 	// default value for the group object filter if nothing is passed
 	if groupObjectFilter == "" {
 		groupObjectFilter = "(objectClass=group)"
 	}
 
-	filter := generateFilterString(keyQuals, quals, groupObjectFilter)
+	filter := generateFilterString(d, groupObjectFilter)
 
 	logger.Debug("ldap_group.listGroups", "baseDN", baseDN)
 	logger.Debug("ldap_group.listGroups", "filter", filter)
@@ -283,7 +282,7 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 			d.StreamListItem(ctx, row)
 
 			// Check if context has been cancelled or if the limit has been hit (if specified)
-			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			if d.RowsRemaining(ctx) == 0 {
 				return nil, nil
 			}
 		}

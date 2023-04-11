@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/go-ldap/ldap/v3"
-	"github.com/turbot/steampipe-plugin-sdk/v4/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin"
-	"github.com/turbot/steampipe-plugin-sdk/v4/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 )
 
 type organizationalUnitRow struct {
@@ -125,7 +125,7 @@ func getOrganizationalUnit(ctx context.Context, d *plugin.QueryData, h *plugin.H
 	logger := plugin.Logger(ctx)
 	logger.Trace("ldap_organizational_unit.getOrganizationalUnit")
 
-	organizationalUnitDN := d.KeyColumnQuals["dn"].GetStringValue()
+	organizationalUnitDN := d.EqualsQuals["dn"].GetStringValue()
 
 	ldapConfig := GetConfig(d.Connection)
 
@@ -188,15 +188,14 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 		organizationalUnitObjectFilter = *ldapConfig.OrganizationalUnitObjectFilter
 	}
 
-	keyQuals := d.KeyColumnQuals
-	quals := d.Quals
+	keyQuals := d.EqualsQuals
 
 	// default value for the organizational unit object filter if nothing is passed
 	if organizationalUnitObjectFilter == "" {
 		organizationalUnitObjectFilter = "(objectClass=organizationalUnit)"
 	}
 
-	filter := generateFilterString(keyQuals, quals, organizationalUnitObjectFilter)
+	filter := generateFilterString(d, organizationalUnitObjectFilter)
 
 	logger.Debug("ldap_organizational_unit.listOrganizationalUnits", "baseDN", baseDN)
 	logger.Debug("ldap_organizational_unit.listOrganizationalUnits", "filter", filter)
@@ -251,7 +250,7 @@ func listOrganizationalUnits(ctx context.Context, d *plugin.QueryData, _ *plugin
 			d.StreamListItem(ctx, row)
 
 			// Check if context has been cancelled or if the limit has been hit (if specified)
-			if d.QueryStatus.RowsRemaining(ctx) == 0 {
+			if d.RowsRemaining(ctx) == 0 {
 				return nil, nil
 			}
 		}
