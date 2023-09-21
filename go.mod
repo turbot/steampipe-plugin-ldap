@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/bwmarrin/go-objectsid v0.0.0-20191126144531-5fee401a2f37
 	github.com/go-ldap/ldap/v3 v3.3.0
-	github.com/iancoleman/strcase v0.2.0
+	github.com/iancoleman/strcase v0.3.0
 	github.com/turbot/steampipe-plugin-sdk/v5 v5.5.1
 )
 
