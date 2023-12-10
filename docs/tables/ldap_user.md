@@ -11,6 +11,26 @@ The Lightweight Directory Access Protocol (LDAP) is a protocol designed to manag
 
 The `ldap_user` table provides insights into user entries within the LDAP directory. As an IT administrator, explore user-specific details through this table, including distinguished names, common names, and email addresses. Utilize it to uncover information about users, such as their specific attributes, the hierarchical structure of the directory, and the relationships between different entries.
 
+**Important Notes**
+
+- This table supports optional quals. Queries with optional quals in a `where` clause are optimised to use LDAP search filters.
+- If `filter` is provided, other optional quals will not be used when searching.
+- Optional quals are supported for the following columns:
+  - `cn`
+  - `department`
+  - `description`
+  - `disabled`
+  - `display_name`
+  - `filter` - Allows use of an explicit filter. Please refer to [LDAP filter language](https://ldap.com/ldap-filters/).
+  - `given_name`
+  - `mail`
+  - `object_sid`
+  - `sam_account_name`
+  - `surname`
+  - `user_principal_name`
+  - `when_created`
+  - `when_changed`
+
 ## Examples
 
 ### Basic info

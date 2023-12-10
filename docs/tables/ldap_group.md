@@ -1,16 +1,29 @@
 ---
-title: "Steampipe Table: ldap_group - Query OCI LDAP Groups using SQL"
-description: "Allows users to query LDAP Groups in OCI, specifically the group DN, CN, and member details, providing insights into group configurations and membership."
+title: "Steampipe Table: ldap_group - Query LDAP Groups using SQL"
+description: "Allows users to query LDAP Groups, specifically the group DN, CN, and member details, providing insights into group configurations and membership."
 ---
 
-# Table: ldap_group - Query OCI LDAP Groups using SQL
+# Table: ldap_group - Query LDAP Groups using SQL
 
-Oracle Cloud Infrastructure's (OCI) Lightweight Directory Access Protocol (LDAP) is a protocol used to access directory listings within Active Directory (AD), OpenLDAP, and other directory systems. It allows users to access and manage a variety of information, including user profiles, groups, and network information. The LDAP service in OCI provides a way to connect to and manage your LDAP directories.
+Lightweight Directory Access Protocol (LDAP) is a protocol used to access directory listings within Active Directory (AD), OpenLDAP, and other directory systems. It allows users to access and manage a variety of information, including user profiles, groups, and network information. The LDAP service in provides a way to connect to and manage your LDAP directories.
 
 ## Table Usage Guide
 
-The `ldap_group` table provides insights into LDAP groups within OCI's LDAP service. As a Systems Administrator, explore group-specific details through this table, including distinguished names (DN), common names (CN), and member details. Utilize it to uncover information about groups, such as those with specific members, the hierarchical relationships between groups, and the verification of group configurations.
+The `ldap_group` table provides insights into LDAP groups within LDAP service. As a Systems Administrator, explore group-specific details through this table, including distinguished names (DN), common names (CN), and member details. Utilize it to uncover information about groups, such as those with specific members, the hierarchical relationships between groups, and the verification of group configurations.
 
+**Important Notes**
+
+- This table supports optional quals. Queries with optional quals in a `where` clause are optimised to use LDAP search filters.
+- If `filter` is provided, other optional quals will not be used when searching.
+- Optional quals are supported for the following columns:
+  - `cn`
+  - `description`
+  - `filter` - Allows use of an explicit filter. Please refer to [LDAP filter language](https://ldap.com/ldap-filters/).
+  - `object_sid`
+  - `sam_account_name`
+  - `when_changed`
+  - `when_created`
+  
 ## Examples
 
 ### Basic info

@@ -11,6 +11,16 @@ An LDAP Organizational Unit represents a container that can hold users, groups, 
 
 The `ldap_organizational_unit` table provides insights into the structure and hierarchy of LDAP directories. As a system administrator, explore details about organizational units through this table, including their distinguished names, attributes, and associated metadata. Utilize it to understand the organization's structure, manage resources efficiently, and implement access control effectively.
 
+**Important Notes**
+- This table supports optional quals. Queries with optional quals in a `where` clause are optimised to use LDAP search filters.
+- If `filter` is provided, other optional quals will not be used when searching.
+- Optional quals are supported for the following columns:
+  - `description`
+  - `filter` - Allows use of an explicit filter. Please refer to [LDAP filter language](https://ldap.com/ldap-filters/).
+  - `ou`
+  - `when_changed`
+  - `when_created`
+
 ## Examples
 
 ### Basic info
