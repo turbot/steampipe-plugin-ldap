@@ -8,6 +8,7 @@ short_name: "ldap"
 description: "Steampipe plugin for querying users, groups, organizational units and more from LDAP."
 og_description: "Query LDAP with SQL! Open source CLI. No DB required."
 og_image: "/images/plugins/turbot/ldap-social-graphic.png"
+engines: ["steampipe", "sqlite", "postgres", "export"]
 ---
 
 # LDAP + Steampipe
