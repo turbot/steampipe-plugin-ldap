@@ -8,13 +8,14 @@ short_name: "ldap"
 description: "Steampipe plugin for querying users, groups, organizational units and more from LDAP."
 og_description: "Query LDAP with SQL! Open source CLI. No DB required."
 og_image: "/images/plugins/turbot/ldap-social-graphic.png"
+engines: ["steampipe", "sqlite", "postgres", "export"]
 ---
 
 # LDAP + Steampipe
 
 [LDAP](https://ldap.com/) is a mature, flexible, and well supported standards-based mechanism for interacting with directory servers. It’s often used for authentication and storing information about users, groups, and applications, but an LDAP directory server is a fairly general-purpose data store and can be used in a wide variety of applications.
 
-[Steampipe](https://steampipe.io) is an open source CLI to instantly query cloud APIs using SQL.
+[Steampipe](https://steampipe.io) is an open-source zero-ETL engine to instantly query cloud APIs using SQL.
 
 For example:
 
