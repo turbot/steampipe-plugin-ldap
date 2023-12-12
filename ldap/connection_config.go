@@ -2,54 +2,19 @@ package ldap
 
 import (
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/schema"
 )
 
 type ldapConfig struct {
-	Attributes                     []string `cty:"attributes"`
-	BaseDN                         *string  `cty:"base_dn"`
-	Username                       *string  `cty:"username"`
-	Password                       *string  `cty:"password"`
-	Host                           *string  `cty:"host"`
-	Port                           *string  `cty:"port"`
-	TLSRequired                    *bool    `cty:"tls_required"`
-	UserObjectFilter               *string  `cty:"user_object_filter"`
-	GroupObjectFilter              *string  `cty:"group_object_filter"`
-	OrganizationalUnitObjectFilter *string  `cty:"ou_object_filter"`
-}
-
-var ConfigSchema = map[string]*schema.Attribute{
-	"attributes": {
-		Type: schema.TypeList,
-		Elem: &schema.Attribute{Type: schema.TypeString},
-	},
-	"base_dn": {
-		Type: schema.TypeString,
-	},
-	"username": {
-		Type: schema.TypeString,
-	},
-	"password": {
-		Type: schema.TypeString,
-	},
-	"host": {
-		Type: schema.TypeString,
-	},
-	"port": {
-		Type: schema.TypeString,
-	},
-	"tls_required": {
-		Type: schema.TypeBool,
-	},
-	"user_object_filter": {
-		Type: schema.TypeString,
-	},
-	"group_object_filter": {
-		Type: schema.TypeString,
-	},
-	"ou_object_filter": {
-		Type: schema.TypeString,
-	},
+	Attributes                     []string `hcl:"attributes"`
+	BaseDN                         *string  `hcl:"base_dn"`
+	Username                       *string  `hcl:"username"`
+	Password                       *string  `hcl:"password"`
+	Host                           *string  `hcl:"host"`
+	Port                           *string  `hcl:"port"`
+	TLSRequired                    *bool    `hcl:"tls_required"`
+	UserObjectFilter               *string  `hcl:"user_object_filter"`
+	GroupObjectFilter              *string  `hcl:"group_object_filter"`
+	OrganizationalUnitObjectFilter *string  `hcl:"ou_object_filter"`
 }
 
 func ConfigInstance() interface{} {
