@@ -1,3 +1,9 @@
+## v0.5.1 [2023-12-12]
+
+_Bug fixes_
+
+- Fixed the missing optional tag on the `attributes` connection config parameter.
+
 ## v0.5.0 [2023-12-12]
 
 _What's new?_
