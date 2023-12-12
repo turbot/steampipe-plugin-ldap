@@ -5,7 +5,7 @@ import (
 )
 
 type ldapConfig struct {
-	Attributes                     []string `hcl:"attributes"`
+	Attributes                     []string `hcl:"attributes,optional"`
 	BaseDN                         *string  `hcl:"base_dn"`
 	Username                       *string  `hcl:"username"`
 	Password                       *string  `hcl:"password"`
