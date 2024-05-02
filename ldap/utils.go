@@ -12,7 +12,9 @@ import (
 	"github.com/go-ldap/ldap/v3"
 	"github.com/iancoleman/strcase"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v5/memoize"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 )
 
 // Map containing column name to ldap display name mapping for properties having different column name and ldap display name.
@@ -171,7 +173,7 @@ func generateFilterString(d *plugin.QueryData, objectFilter string) string {
 			}
 			andClauses.WriteString(clause)
 		}
-		quals:= d.Quals
+		quals := d.Quals
 		// Get individual quals
 		if quals["when_created"] != nil {
 			for _, q := range quals["when_created"].Quals {
@@ -280,4 +282,51 @@ func transformAttributes(ctx context.Context, attributes []*ldap.EntryAttribute)
 		data[attribute.Name] = attribute.Values
 	}
 	return data
+}
+
+func commonColumns(c []*plugin.Column) []*plugin.Column {
+	return append([]*plugin.Column{
+		{
+			Name:        "host_name",
+			Description: "The name of the host.",
+			Type:        proto.ColumnType_STRING,
+			Hydrate:     getHostName,
+			Transform:   transform.FromValue(),
+		},
+	}, c...)
+}
+
+var getHostNameMemoize = plugin.HydrateFunc(getHostNameUncached).Memoize(memoize.WithCacheKeyFunction(getHostNameCacheKey))
+
+func getHostNameCacheKey(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	cacheKey := "getHostName"
+	return cacheKey, nil
+}
+
+func getHostName(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+
+	config, err := getHostNameMemoize(ctx, d, h)
+	if err != nil {
+		return nil, err
+	}
+
+	c := config.(ldapConfig)
+
+	return c.Host, nil
+}
+
+func getHostNameUncached(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+	cacheKey := "getHostName"
+
+	var ldapData ldapConfig
+
+	if cachedData, ok := d.ConnectionManager.Cache.Get(cacheKey); ok {
+		ldapData = cachedData.(ldapConfig)
+	} else {
+		ldapData = GetConfig(d.Connection)
+
+		d.ConnectionManager.Cache.Set(cacheKey, ldapData)
+	}
+
+	return ldapData, nil
 }

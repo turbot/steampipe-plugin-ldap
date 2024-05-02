@@ -87,7 +87,7 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				{Name: "when_created", Operators: []string{">", ">=", "=", "<", "<="}, Require: plugin.Optional},
 			},
 		},
-		Columns: []*plugin.Column{
+		Columns: commonColumns([]*plugin.Column{
 			// Top Columns
 			{
 				Name:        "dn",
@@ -211,7 +211,7 @@ func tableLDAPUser(ctx context.Context) *plugin.Table {
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromField("Cn"),
 			},
-		},
+		}),
 	}
 }
 
