@@ -11,6 +11,12 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 	p := &plugin.Plugin{
 		Name:             "steampipe-plugin-ldap",
 		DefaultTransform: transform.FromGo(),
+		ConnectionKeyColumns: []plugin.ConnectionKeyColumn{
+			{
+				Name:    "host_name",
+				Hydrate: getHostName,
+			},
+		},
 		ConnectionConfigSchema: &plugin.ConnectionConfigSchema{
 			NewInstance: ConfigInstance,
 		},
