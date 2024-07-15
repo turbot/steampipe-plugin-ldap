@@ -316,17 +316,8 @@ func getHostName(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData
 }
 
 func getHostNameUncached(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	cacheKey := "getHostName"
-
-	var ldapData ldapConfig
-
-	if cachedData, ok := d.ConnectionManager.Cache.Get(cacheKey); ok {
-		ldapData = cachedData.(ldapConfig)
-	} else {
-		ldapData = GetConfig(d.Connection)
-
-		d.ConnectionManager.Cache.Set(cacheKey, ldapData)
-	}
+	
+	ldapData = GetConfig(d.Connection)
 
 	return ldapData, nil
 }
