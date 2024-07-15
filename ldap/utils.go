@@ -316,8 +316,8 @@ func getHostName(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData
 }
 
 func getHostNameUncached(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	
-	ldapData = GetConfig(d.Connection)
+
+	ldapData := GetConfig(d.Connection)
 
 	return ldapData, nil
 }
