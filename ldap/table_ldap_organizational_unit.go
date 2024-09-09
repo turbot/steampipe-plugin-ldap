@@ -143,7 +143,7 @@ func getOrganizationalUnit(ctx context.Context, d *plugin.QueryData, h *plugin.H
 		return nil, err
 	}
 
-	if result.Entries != nil && len(result.Entries) > 0 {
+	if len(result.Entries) > 0 {
 		entry := result.Entries[0]
 		row := organizationalUnitRow{
 			Dn:          entry.DN,
