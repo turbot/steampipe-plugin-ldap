@@ -3,6 +3,8 @@ package ldap
 import (
 	"context"
 	"crypto/tls"
+	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
@@ -277,11 +279,77 @@ func convertToTimestamp(ctx context.Context, str string) *time.Time {
 }
 
 func transformAttributes(ctx context.Context, attributes []*ldap.EntryAttribute) map[string][]string {
-	var data = make(map[string][]string)
+	data := make(map[string][]string)
+
 	for _, attribute := range attributes {
-		data[attribute.Name] = attribute.Values
+		switch attribute.Name {
+		case "objectSid":
+			// Expect exactly one SID
+			if len(attribute.ByteValues) == 1 {
+				if sid, err := decodeSID(attribute.ByteValues[0]); err == nil {
+					data[attribute.Name] = []string{sid}
+				} else {
+					data[attribute.Name] = []string{fmt.Sprintf("decode error: %v", err)}
+				}
+			}
+		case "objectGUID":
+			if len(attribute.ByteValues) == 1 {
+				if guid, err := decodeGUID(attribute.ByteValues[0]); err == nil {
+					data[attribute.Name] = []string{guid}
+				} else {
+					data[attribute.Name] = []string{fmt.Sprintf("decode error: %v", err)}
+				}
+			}
+		default:
+			// Default to using string values
+			data[attribute.Name] = attribute.Values
+		}
 	}
+
 	return data
+}
+
+// --- SID decoder ---
+func decodeSID(b []byte) (string, error) {
+	if len(b) < 8 {
+		return "", fmt.Errorf("invalid SID length (%d bytes)", len(b))
+	}
+
+	revision := b[0]
+	subAuthCount := int(b[1])
+
+	if len(b) < 8+subAuthCount*4 {
+		return "", fmt.Errorf("truncated SID: need %d bytes, got %d", 8+subAuthCount*4, len(b))
+	}
+
+	authority := uint64(0)
+	for i := 2; i < 8; i++ {
+		authority = (authority << 8) | uint64(b[i])
+	}
+
+	sid := fmt.Sprintf("S-%d-%d", revision, authority)
+	for i := 0; i < subAuthCount; i++ {
+		start := 8 + i*4
+		subAuth := binary.LittleEndian.Uint32(b[start : start+4])
+		sid += fmt.Sprintf("-%d", subAuth)
+	}
+	return sid, nil
+}
+
+// --- GUID decoder ---
+func decodeGUID(b []byte) (string, error) {
+	if len(b) != 16 {
+		return "", fmt.Errorf("invalid GUID length (%d bytes)", len(b))
+	}
+	d1 := binary.LittleEndian.Uint32(b[0:4])
+	d2 := binary.LittleEndian.Uint16(b[4:6])
+	d3 := binary.LittleEndian.Uint16(b[6:8])
+
+	return fmt.Sprintf("%08x-%04x-%04x-%02x%02x-%s",
+		d1, d2, d3,
+		b[8], b[9],
+		hex.EncodeToString(b[10:16]),
+	), nil
 }
 
 func commonColumns(c []*plugin.Column) []*plugin.Column {
