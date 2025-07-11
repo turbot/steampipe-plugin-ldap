@@ -279,6 +279,12 @@ func convertToTimestamp(ctx context.Context, str string) *time.Time {
 func transformAttributes(ctx context.Context, attributes []*ldap.EntryAttribute) map[string][]string {
 	var data = make(map[string][]string)
 	for _, attribute := range attributes {
+		if attribute.Name == "objectSid" {
+			plugin.Logger(ctx).Debug("ldap_utils.transformAttributes", "objectSid", attribute.ByteValues)
+		}
+		if attribute.Name == "objectGUID" {
+			plugin.Logger(ctx).Debug("ldap_utils.transformAttributes", "objectGUID", attribute.ByteValues)
+		}
 		data[attribute.Name] = attribute.Values
 	}
 	return data
