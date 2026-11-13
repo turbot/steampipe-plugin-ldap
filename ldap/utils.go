@@ -11,10 +11,10 @@ import (
 	"github.com/bwmarrin/go-objectsid"
 	"github.com/go-ldap/ldap/v3"
 	"github.com/iancoleman/strcase"
-	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v5/memoize"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v6/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v6/memoize"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin/transform"
 )
 
 // Map containing column name to ldap display name mapping for properties having different column name and ldap display name.
@@ -32,11 +32,11 @@ const FilterTimestampFormat = "20060102150405.000Z"
 // Disabled User Filter
 const DisabledUserFilter = "(userAccountControl:1.2.840.113556.1.4.803:=2)"
 
-func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
+func connect(ctx context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 
 	// Load connection from cache
 	cacheKey := "ldap"
-	if cachedData, ok := d.ConnectionManager.Cache.Get(cacheKey); ok {
+	if cachedData, ok := d.ConnectionCache.Get(ctx, cacheKey); ok {
 		return cachedData.(*ldap.Conn), nil
 	}
 
@@ -102,13 +102,13 @@ func connect(_ context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
 
 	// Save to cache
 	// TODO: Use SetWithTTL once we know what default timeout is
-	d.ConnectionManager.Cache.Set(cacheKey, ldapConn)
+	_ = d.ConnectionCache.Set(ctx, cacheKey, ldapConn)
 
 	return ldapConn, nil
 }
 
 func reconnect(ctx context.Context, d *plugin.QueryData) (*ldap.Conn, error) {
-	d.ConnectionManager.Cache.Delete("ldap")
+	d.ConnectionCache.Delete(ctx, "ldap")
 	conn, err := connect(ctx, d)
 	if err != nil {
 		plugin.Logger(ctx).Error("ldap_utils.reconnect", "reconnect_error", err)

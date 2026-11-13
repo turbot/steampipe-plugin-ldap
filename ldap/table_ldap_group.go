@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/go-ldap/ldap/v3"
-	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
-	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
+	"github.com/turbot/steampipe-plugin-sdk/v6/grpc/proto"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin"
+	"github.com/turbot/steampipe-plugin-sdk/v6/plugin/transform"
 )
 
 type groupRow struct {
@@ -202,7 +202,7 @@ func listGroups(ctx context.Context, d *plugin.QueryData, _ *plugin.HydrateData)
 
 	var baseDN, groupObjectFilter string
 	var attributes []string
-	var pageSize uint32 = PageSize
+	pageSize := PageSize
 
 	ldapConfig := GetConfig(d.Connection)
 	if ldapConfig.BaseDN != nil {
